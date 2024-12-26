@@ -1,0 +1,5992 @@
+https://leetcode.com/discuss/interview-question/1693351/Google-or-Create-a-tree-or-Jan-'22
+Google | Create a tree | Jan '22
+7
+Anonymous User
+Anonymous User
+Last Edit: January 16, 2022 11:06 AM
+
+1.1K VIEWS
+
+This was asked in Google Interview.
+
+
+Given a list of parent-child relationships, build a tree out of it.
+
+
+Example Input:
+
+
+80 19
+50 20
+20 15
+80 16
+50 80
+20 17
+
+
+You should return the following tree:
+
+
+         50
+        /  \
+      20    80
+     / \    / \
+    15 17  19 16
+PS: This doesn't have to be a binary tree. You need to return a root node.
+
+google
+tree
+india
+Comments: 10
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+dotaneli's avatar
+dotaneli
+52
+January 16, 2022 3:51 PM
+
+Read More
+I would iterate the data and create TreeNode element per pair. (append child to parent). I would save a hashmap with key of parent value (i.e. 80) and value of reference to TreeNode.
+Per TreeNode I build or child I append, I first check if that element is already built in the hashmap and use the reference. Otherwise, I create ad-hoc.
+
+2
+Reply
+Share
+Report
+c0D3M's avatar
+c0D3M
+
+2017
+January 16, 2022 3:06 PM
+
+Read More
+Topological ordering can also be considered, root node indegree would be 0 , so take that first and from there on standar6 Kahn algorithm.
+
+1
+Reply
+Share
+Report
+akshayjaryal's avatar
+AKSHAY JARYAL
+0
+July 5, 2024 12:09 PM
+
+Read More
+With Easy explanation of code in Python
+
+
+class Node:
+def init(self, value):
+self.value = value
+self.children = []
+
+
+def build_tree(relationships):
+node_map = {}
+root = None
+
+
+# Step 1: Create nodes for all parent-child relationships
+for parent, child in relationships:
+    if parent not in node_map:
+        node_map[parent] = Node(parent)
+    if child not in node_map:
+        node_map[child] = Node(child)
+    
+    parent_node = node_map[parent]
+    child_node = node_map[child]
+    
+    parent_node.children.append(child_node)
+    
+    # If this is the root node (first pair in the input), set it as the root
+    if root is None:
+        root = parent_node
+
+return root
+Example Input relationships
+relationships = [
+(80, 19),
+(50, 20),
+(20, 15),
+(80, 16),
+(50, 80),
+(20, 17)
+]
+
+
+Build the tree
+root_node = build_tree(relationships)
+
+
+Function to print the tree using depth-first traversal
+def print_tree(node, level=0):
+if node:
+print(' ' * level + str(node.value))
+for child in node.children:
+print_tree(child, level + 1)
+
+
+Print the tree
+print_tree(root_node)
+
+0
+Reply
+Share
+Report
+mklgoyal167's avatar
+Mukul Goyal
+338
+January 19, 2022 10:44 PM
+
+Read More
+Store par-child relation nodes in a hash map.
+For finding root node, choose any node and go onto top until you cannot find its parent and return it.
+
+0
+Reply
+Share
+Report
+tonystarkironman's avatar
+tonystarkironman
+
+28
+January 19, 2022 3:25 AM
+
+Read More
+Is this for internship or full time?
+
+0
+Reply
+Share
+Report
+ko082528's avatar
+ko082528
+74
+January 17, 2022 11:31 PM
+
+Read More
+Iterate over all pairs, get/create node for parent and children and assign child to the parent.. Also add parent and child nodes to a hashmap (so you won't make node next time val comes
+generate a list of parents and a set of children. Then iterate over all parents, if it's not in the children set then it is the root -- return it.
+This would talk o(n) space and time, where n is the number of nodes in the tree.
+0
+Reply
+Share
+Report
+MajorMikeTango's avatar
+MajorMikeTango
+
+1251
+January 17, 2022 3:29 AM
+
+Read More
+Location, level and phone/onsite?
+
+0
+Reply
+Share
+Report
+mittalvishal's avatar
+Vishal Mittal
+
+98
+January 16, 2022 5:51 PM
+
+Read More
+public class ConstructTree {
+
+
+static class TreeNode{
+    int val;
+    ArrayList<TreeNode> childs;
+    public TreeNode(int val){
+        this.val = val;
+        childs = new ArrayList<>();
+    }
+}
+
+public TreeNode constructTree(List<Map.Entry<Integer, Integer>> nodes){
+    HashMap<Integer, TreeNode> map = new HashMap<>();
+    HashMap<Integer, Integer> degreeMap = new HashMap<>();
+    constructTree(nodes, map, degreeMap);
+    int max = Integer.MIN_VALUE;
+    TreeNode root = null;
+    for(Map.Entry<Integer,Integer> entry: degreeMap.entrySet()){
+        if(entry.getValue() > max){
+            max = entry.getValue();
+            root = map.get(entry.getKey());
+        }
+    }
+    return root;
+}
+
+private void constructTree(List<Map.Entry<Integer, Integer>> nodes, HashMap<Integer, TreeNode> map, HashMap<Integer, Integer> degreeMap){
+    for(Map.Entry<Integer, Integer> node: nodes){
+        int parent = node.getKey();
+        int child = node.getValue();
+        TreeNode parentNode = null;
+        TreeNode childNode = null;
+        if(map.containsKey(node.getKey())){
+            parentNode = map.get(parent);
+        }else{
+            parentNode = new TreeNode(parent);
+        }
+        if(map.containsKey(node.getValue())){
+            childNode = map.get(child);
+        }else{
+            childNode = new TreeNode(child);
+        }
+        parentNode.childs.add(childNode);
+        map.put(parentNode.val, parentNode);
+        map.put(childNode.val, childNode);
+        degreeMap.put(parent, degreeMap.getOrDefault(parent, 0) + 1);
+        degreeMap.put(child, degreeMap.getOrDefault(child, 0) - 1);
+    }
+}
+}
+
+0
+Reply
+Share
+Report
+benslie's avatar
+Benslie
+
+20
+January 16, 2022 1:32 PM
+
+Read More
+Here's the code to return construct the tree and return the root:
+
+
+from collections import defaultdict
+from typing import List, Tuple
+
+
+class TreeNode:
+    def __init__(self, val: int):
+        self.val = val
+        self.children = []
+
+    def add_children(self, children_list: List["TreeNode"]):
+        self.children = children_list
+
+
+class Solution:
+    def create_tree(self, node_list: List[Tuple[int, int]]) -> TreeNode:
+        created = set()
+        node_map = {}
+        # Create a map of val -> Node
+        # Add the val in created if it is done once
+        # Time: O(n)
+        for node in node_list:
+            par, child = node
+            if par not in created:
+                n = TreeNode(par)
+                created.add(par)
+                node_map[par] = n
+            if child not in created:
+                n = TreeNode(child)
+                created.add(child)
+                node_map[child] = n
+
+        # Create an adj list/ parent => children map
+        # Time: O(n)
+        adj_list = defaultdict(list)
+        for node in node_list:
+            par, child = node
+            adj_list[node_map[par]].append(node_map[child])
+
+        # Add children to the tree node
+        for key, value in adj_list.items():
+            key.add_children(value)
+
+        pars_list = list(map(lambda x: x[0], node_list))
+        children_list = list(map(lambda x: x[1], node_list))
+
+        # Check which parent is not present in children list, that node is the root
+        for par in pars_list:
+            if par not in children_list:
+                return node_map[par]
+
+    def print_nodes(self, root_node):
+        if root_node:
+            print(root_node.val)
+            for child in root_node.children:
+                self.print_nodes(child)
+
+
+s = Solution()
+root_node = s.create_tree(
+    [
+        (80, 19),
+        (50, 20),
+        (20, 15),
+        (80, 16),
+        (50, 80),
+        (20, 17),
+    ]
+)
+
+print(f"Root node: {root_node.val}")
+print("---printing tree - preorder traversal ---")
+s.print_nodes(root_node)
+print("-------------")
+
+
+root_node = s.create_tree(
+    [
+        (80, 19)
+    ]
+)
+
+print(f"Root node: {root_node.val}")
+print("---printing tree - preorder traversal ---")
+s.print_nodes(root_node)
+print("-------------")
+Root node: 50
+---printing tree - preorder traversal ---
+50
+20
+15
+17
+80
+19
+16
+-------------
+Root node: 80
+---printing tree - preorder traversal ---
+80
+19
+-------------
+Time complexity: O(N) where N = length of par-child list passed
+Space complexity: O(unique nodes)
+
+0
+Reply
+Share
+Report
+Versatile15's avatar
+Venkat
+
+181
+January 16, 2022 11:02 AM
+
+Read More
+This sounds like building a graph using the given vertices and then constructing/ assuming the graph itself as a tree. Correct me if I am wrong!
+
+https://leetcode.com/discuss/interview-question/1735663/Google-or-Phone-Screen-or-SWE-L3
+Google | Phone Screen | SWE L3
+1
+Anonymous User
+Anonymous User
+Last Edit: February 7, 2022 11:40 AM
+
+1.0K VIEWS
+
+Replace string variable with it's value for printf function.
+String would contain only "%d" and the values following that will be only integers. Lets say for simplicity input will be a string and array of integers, which can be parsed from the printf statement.
+Ex. printf("hi %d.", 1)
+should result in: hi 1.
+
+
+Follow up:
+What happens for multiple type; i.e., if the string contains "%d" and "%f".
+printf("hi %d %f.", 1,2.9)
+
+google
+india
+bangalore
+phone-interview
+swe
+Comments: 3
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+benslie's avatar
+Benslie
+
+20
+February 1, 2022 11:51 PM
+
+Read More
+If there are multiple %d present in the string, how does the value as an input look like?
+
+
+printf("hi %d %d", 1,1)
+Like this? Or it is an array of values?
+Also, input type is defined? Just numbers, or strings, or anything?
+
+0
+Show 1 reply
+Reply
+Share
+Report
+Surprise6's avatar
+Nick C
+1
+July 27, 2022 9:07 AM
+
+Read More
+Would the solution for this essentially be to just linearly scan the input, and if you come across a '%d', just take the next indexed value from the array input? Or am I missing something here?
+
+
+def printf_string_parse(input_string, arr):
+    output = ""
+    arr_index = 0
+    str_index = 0
+    while str_index < len(input_string):
+        if input_string[str_index] == "%" and input_string[str_index+1] == "d":
+            if arr_index < len(arr):
+                output += str(arr[arr_index])
+                arr_index += 1
+                str_index += 2
+            else:
+                raise IndexError( "Input string contains more '%d' markers than there are variables to print" )
+        else:
+            output += input_string[str_index]
+            str_index += 1
+
+    return output            
+0
+Reply
+Share
+Report
+LC_Jesse's avatar
+LC_Jesse
+856
+February 1, 2022 9:33 PM
+
+Read More
+Hi there!
+If you could please edit the post title to the following layout: Company Name | Stage (Phone, Onsite, OA) | Question name
+We ask that you can follow these guidelines here, thank you!
+
+0
+Reply
+Share
+Report
+https://leetcode.com/discuss/interview-question/1807365/Google
+
+Google
+5
+csforall's avatar
+Sunyul Hossen
+
+24
+Last Edit: February 28, 2022 11:19 PM
+
+4.2K VIEWS
+
+Question
+We are given a list of Employees with their ID, manager ID, and Name. The question ask us to print the names of all the employees in a hierarchy.
+Note: [The Ultimate manager is the one with the highest ID Value and whose ID is same as the Manager ID]
+
+
+List of Employees INPUT:-
+
+
+    { id: 8, managerId: 8, name: "Alice" },
+    { id: 2, managerId: 8, name: "Bob" },
+    { id: 3, managerId: 2, name: "Emp3" },
+    { id: 4, managerId: 3, name: "Emp4" },
+    { id: 5, managerId: 4, name: "Emp5" },
+    { id: 6, managerId: 3, name: "Emp6" },
+    { id: 7, managerId: 8, name: "Emp7" },
+];
+Output:-
+
+
+// ---Bob
+// ------Emp3
+// ---------Emp4
+// ------------Emp5
+// ---------Emp6
+// ---Emp7
+Solution:-
+class Employee;
+
+class Solution
+{
+public:
+	static void printPrettyNames(vector<Employee*> &employees);
+
+	static void dfsPrint(Employee *emp, int indent);
+};
+
+//Creating The Skeleton Of The System.
+class Employee
+{
+   public:
+   int id = 0;		//id -> Current Employee's ID.
+   int managerID = 0;		//managerID -> Manager's ID Of The Current Employee.
+   string name;		//Name Of The Current Employee.
+   vector<Employee*> team;		//Team Of (Sub-Ordinates/Other Employees) Under The Current Employee.
+
+   Employee(int id, int managerId, const string &name);		//Creating a Constructor To Initialize The Values Given By The User.
+
+};
+
+void Solution::printPrettyNames(vector<Employee*> &employees)
+{
+  unordered_map<int, Employee*> idToEmployee;		//Creating A Map To Link an Employee With Other Associated Employees.
+  int maxId = -1;		//maxId Will Store The ID Of The Ultimate Manager.
+
+  for (auto e : employees)		//Traversing Through All The Employees.
+  {
+	  idToEmployee[e->id] = e;		//Linking Employee IDs.
+
+	  if (e->id == e->managerID)		//If The Employee ID Is Same As The Manager ID, Chances Are It Is The Ultimate Manager.
+	  {
+		 maxId = max(maxId, e->id);		//Keep Track Of The Ultimate Manager.
+	  }
+
+	  else		//If The Employee ID Is Not Same As The Manager ID, We Will Link The Current Employee With It's Manager.
+	  {
+		  if (idToEmployee.find(e->managerID) != idToEmployee.end())
+		  {
+			  idToEmployee[e->managerID]->team.push_back(e);		//Pushing The Employee Into It's Manager's Team.
+		  }
+	  }
+  }
+
+  Employee *highest = idToEmployee[maxId];		//*highest Will Be Pointing To The Ultimate Manager.
+  dfsPrint(highest,0);		//Calling A Recursive Function To Print The Ultimate Manager And It's Sub-Ordinates In A Hierarchy, With An Indentation For Better Look.
+
+
+}
+
+void Solution::dfsPrint(Employee *emp, int indent)
+{
+	if (emp == nullptr)		//If emp is Pointing To A nullptr i.e, If No Employee Exist In A Parent Employee's Team, Just Return.
+	{
+	   return;
+	}
+
+	cout << emp->name.indent(indent) << std::endl;		//Else, Print The Current Employee's Name With An Indentation.
+
+	for (auto e : *emp->team)		//Traverse Through The Current Employee's Team And Again Do A Recrusive Call With An Indentation Of 3 For Better Look.
+	{
+		dfsPrint(e,indent + 3);
+	}
+
+}
+
+Employee::Employee(int id, int managerId, const string &name)
+{
+	this->id = id;
+	this->managerID = managerId;
+	this->name = name;
+	team = vector<Employee>();
+
+}
+For a detailed Video Explanation, you can visit this link:- xsrt.ml/EmployeeHierarchy
+
+google
+university grad
+india
+depth first search
+l3
+google bangalore
+Comments: 6
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+techsane's avatar
+techsane
+3
+March 1, 2022 10:56 PM
+
+Read More
+This seems too easy for a Google question. What was your feedback ?
+
+3
+Show 9 replies
+Reply
+Share
+Report
+akashgupta29's avatar
+Akash Gupta
+
+1054
+March 14, 2022 4:40 AM
+
+https://leetcode.com/discuss/interview-question/1900636/Google-or-Phone-Interview-or-Implement-software-router
+Google  | Phone Interview | Implement software router
+3
+Anonymous User
+Anonymous User
+Last Edit: March 31, 2022 7:39 PM
+
+938 VIEWS
+
+I have applied for embedded developer role. Below question asked in 45 minutes Phone interview.
+
+
+Question 1:
+Implement a software router. The hardware includes:
+
+
+A general purpose computer (a CPU + some RAM)
+
+
+M Input ports and N output ports, where each port can hold 32 bits of data.
+
+
+Protocol:
+Router receives and sends "Messages", where each message consists of 2 packets of 32 bits (data0, data1)
+
+
+Each input port can receive multiple messages and receive them back to back. Each message needs to be sent out
+to the correct destination port. Ports may take time to consume these messages.
+
+
+Message API: 
+int get_dest_port_id(uint32 data0); // Call this on first packet of a message to decode the destination port id.
+
+
+Both packets of a Message must be received from input port and forwarded to output port in correct order.
+
+
+Port API: 
+bool input_ready(int port_id); // 32 bits of data is ready to pop. 
+bool output_ready(int port_id); // Port is empty, and can accept 32 bits of data. 
+uint32 pop_input(int port_id); // Ensure input ready before calling this. 
+void push_output(int port_id, uint32 data); // Ensure output ready before calling this.
+
+
+Task is to implement the router entry point that continuously processes messages.
+
+
+Question 2:
+
+
+Write a function that sets the given value into specified bit(s) in a 32-bit integer. All bits outside
+of start and end bits should remain unmodified.
+
+
+unsigned int setbits (unsigned int input, unsigned int value, int startbit, int endbit);
+
+
+Example:
+
+
+input: 0b1010111111, value: 0b01, startbit: 2, endbit: 5
+output 0b1010.0001.11
+
+
+0b1010111111
+2 - 5
+0001
+0001 11
+
+
+0b1010 0001 11
+
+google
+india
+embedded
+2022
+embedded system design
+Comments: 2
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+manojkdi's avatar
+Manoj Rajashekaraiah
+0
+June 15, 2023 9:15 AM
+
+Read More
+here is the code block which I thought will work. PLease comment
+
+
+[#include](https://leetcode.com/problems/minimum-interval-to-include-each-query) <stdbool.h>
+#define M 10
+//assuming output ports can be anyting. and assuming that it is valid.
+int main()
+{
+//state 1 =  data0 recieved
+//state 2 = data1 recieved
+//state 3 = data0 sent to o/p port
+//state 4 = data1 sent to o/p port
+int dataState[M] = {0};
+int data0[M] =  {0};
+int data1[M] = {0};
+while(1)
+{
+//for loop to go over input nodes
+for(int i = 0; i<M;i++)
+{
+
+ if(inputPortReady(i) == true || dataState[i] >= 2)
+ {
+    //if all data for a input port not recieved
+    if(dataState[i] < 2)
+    {
+    dataState[i] += 1;
+
+    //if this is the first data byte
+    if(dataState[i] == 1)
+    {
+        data0[i]=popInput();
+    }
+    //if this is the second data byte
+    if(dataState[i] == 2)
+    {
+        data1[i]=popInput();
+    }
+    }
+    
+    // if we have recieved both the data
+    if(dataState[i] == 2)
+    {
+        int destPort = getDestPort(data0[i]);
+        //if the o/p port is ready
+        if(isOutputPortReady(destPort) == true)
+        {
+            //move to next state of transmitting the second byte
+            dataState[i]++;
+            pushOutput(i, data0[i]);
+        }
+    }
+    if(dataState[i] == 3)
+    {
+        int destPort = getDestPort(data0[i]);
+        //if the o/p port is ready
+        if(isOutputPortReady(destPort) == true)
+        {
+            pushOutput(i, data1[i]);
+            //reset the state to 0 as the packet is transferred
+            dataState[i] = 0;
+        }
+    }
+    i = i%M;
+}
+}
+}
+}
+0
+Reply
+Share
+Report
+userM92's avatar
+userM92
+
+1
+April 2, 2022 6:14 AM
+
+Read More
+Thanks for sharing the questions. For the first one, is the system expected to receive the packet in order , meaning data0 from one input port is always followed by data1 from the same input port ? Or could it be random? Since getting the port ID would be one of the important steps here , is there an interrupt generated when there is a message received on the port ?
+Trying to understand the question.
+Would you mind sharing what was your approach here?
+
+0
+Show 3 replies
+Reply
+Share
+Report
+
+https://leetcode.com/discuss/interview-question/1905460/Distance-between-bus-stops
+Distance between bus stops
+0
+shantanu098's avatar
+Shantanu Tripathi
+
+0
+April 2, 2022 11:15 AM
+
+83 VIEWS
+
+class Solution {
+public int distanceBetweenBusStops(int[] distance, int start, int destination) {
+int total = 0;
+int fstd = 0;
+int small = Math.min(start, destination);
+int big = Math.max(start, destination);
+for(int i = 0; i < distance.length; i++){
+total += distance[i];
+if(i >= small && i < big)
+fstd += distance[i];
+}
+return Math.min(fstd, total - fstd);
+}
+}
+
+google
+india
+Comments: 1
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+AbSb's avatar
+AbSb
+
+181
+April 2, 2022 1:14 PM
+
+Read More
+what is the question ?
+
+0
+Reply
+S
+https://leetcode.com/discuss/interview-question/1233715/Google-Interview-Questions-L3L4
+Google Interview Questions L3/L4
+21
+Anonymous User
+Anonymous User
+Last Edit: September 3, 2022 12:45 PM
+
+6.8K VIEWS
+
+Phone Interview:
+
+
+There is a grasshopper that starts from the root node, if the hopper hops to a node with no children the hopper is stuck and can't move further. If the grasshopper has the option to move then it has to make the hop. Basically the goal is to find the probability of the grasshopper landing at each node.
+image
+
+
+For given graph, return probability map for each of not at time = INFINITY;
+
+
+Q2: Same question in a directed acyclic graph?
+image
+
+
+Google Onsite Rounds:
+Round 1
+Q1: Given a list of tasks (a task have id, arrivalTime and executionTime)
+At any point of time from a pool of pending tasks task with minimum execution time will be picked up first by the core.
+and a single core processor to execute those tasks. You need to find the order of execution of jobs.
+(https://leetcode.com/problems/single-threaded-cpu/)
+Followup : Modify the code to get the order of processing using 2 cores processor.
+
+
+Round 2
+Q1 Given an array of building heights.
+You are starting at first building. You have b (no of bricks) and r(no. of ropes). You can only move by 1 building at a time. To move to the next building,
+If next building height is less or equal you can move without using any resource(bricks/ropes).
+If next building height is greater you can either use bricks (1 brick for 1 unit of height) or a rope(you can climb any height using rope).
+(https://leetcode.com/discuss/interview-question/528584/Google-or-Onsite-or-How-Far-Can-We-Reach-using-Rope-and-Bricks/465758)
+find the maximum distance you can cover using given array, b and r.
+
+
+Round 3
+Q1: Given an array of N distinct unsorted integers. Return a list of numbers which can be found in the array using binary search.
+Ex: If the array is [4, 3, 5, 8, 9, 6, 7] answer: 3, 5, 8, 10
+(https://leetcode.com/discuss/interview-question/352743/Google-or-Onsite-or-Guaranteed-Binary-Search-Numbers)
+Followup
+how to prevent dynamic growing of arrayList which is storing result?
+
+
+Round 4
+There is a country that has multiple cities, and for simplicity each city has a 3-letter name. Some pairs of cities are connected with roads. Example:
+Your friend recently took a trip around some of that country's cities. You ask them what their itinerary was, and they say: "I went to AAA, BBB, CCC, DDD in that order."
+
+
+You quickly realize your friend must have misremembered, as this itinerary is impossible. BBB is not connected to CCC, and DDD doesn't exist. But, with a two-letter change, you can make a valid itinerary: AAA, XBB, CCC, DDY so you guess that was your friend's actual itinerary. You could also consider AAA, BBB, GOO, DDY, but that requires 4 letters to change so it's not as good of a guess.
+
+
+Minimise the cost to validate the itenerary.
+
+
+Round 5 (Googlyness)
+Tell something about a project that you are satisfied with/and proud of.
+Tell about an instance where you faced interpersonal problems with people around you.
+Tell about an experience when you have worked with a non performer in your team and how you helped them.
+Tell about the problem where you faced challenges in working with them as peer.
+
+google
+india
+onsite
+google interview
+phone screening
+Comments: 3
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+AbSb's avatar
+AbSb
+
+181
+June 3, 2021 12:00 AM
+
+Read More
+what does prevent dymnamic growing of arraylist mean?
+
+0
+Show 3 replies
+Reply
+Share
+Report
+ashjay07's avatar
+ashjay07
+0
+June 3, 2021 1:12 AM
+
+Read More
+For question 4, are the valid itinerary names given? What do we compare the names against?
+
+0
+Reply
+Share
+Report
+John_Cena's avatar
+Vaibhav Wankar
+
+19
+Last Edit: May 30, 2021 11:58 PM
+
+Read More
+Hey, can you also share the question bank that you might have used to prepare? or any list of questions to practice
+
+0
+Show 1 reply
+Reply
+Share
+Report
+https://leetcode.com/discuss/interview-question/352743/Google-or-Onsite-or-Guaranteed-Binary-Search-Numbers
+
+Google | Onsite | Binary Searchable Numbers
+114
+Sithis's avatar
+Sithis
+
+24236
+Last Edit: August 7, 2019 6:41 PM
+
+17.4K VIEWS
+
+Binary search is a search algorithm usually used on a sorted sequence to quickly find an element with a given value. In this problem we will evaluate how binary search performs on data that isn't necessarily sorted. An element is said to be binary searchable if, regardless of how the pivot is chosen the algorithm returns true. For example:
+
+
+[2, 1, 3, 4, 6, 5] and target = 5, we cannot find 5. Because when the pivot is 4, we get element 6, then right pointer will move left, so we'll lose the opportunity to find target 5.
+[2, 1, 3, 4, 5, 6] and target = 5, we can find 5. Because wherever we choose the pivots, we'll find target at last.
+Given an unsorted array of n distinct integers, return the number of elements that are binary searchable.
+
+
+Example 1:
+
+
+Input: [1, 3, 2]
+Output: 1
+Explanation: However we choose the pivots, we will always find the number 1 when looking for it. This does not hold for 3 and 2.
+Example 2:
+
+
+Input: [2, 1, 3, 5, 4, 6]
+Output: 2
+Explanation: 3 and 6 are the numbers guaranteed to be found.
+Example 3:
+
+
+Input: [1, 5, 7, 11, 12, 18]
+Output: 6
+Explanation: All elements in a sorted sequence are binary searchable.
+Example 4:
+
+
+Input: [3, 2, 1]
+Output: 0
+Explanation: No numbers guaranteed to be found.
+Example 5:
+
+
+Input: [5, 4, 6, 2, 8]
+Output: 1
+Explanation: Only 8 is guaranteed to be found.
+Example 6:
+
+
+Input: [1, 3, 2, 4, 5, 7, 6, 8]
+Output: 4
+The same problem on Topcoder.
+
+
+Solution
+In other words, the problems asks how many elements are larger than all elements to their left, and smaller than all elements to their right.
+Java: https://leetcode.com/playground/aEyByqNK
+Time complexity: O(n).
+Space complexity: O(n).
+https://leetcode.com/discuss/interview-question/528584/Google-or-Onsite-or-How-Far-Can-We-Reach-using-Rope-and-Bricks/465758
+
+Google | Onsite | How Far Can We Reach using Rope and Bricks
+36
+Anonymous User
+Anonymous User
+Last Edit: March 5, 2020 2:15 AM
+
+7.4K VIEWS
+
+Given a zero-inexed array H of height of buildings, number of bricks b and number of ropes r. You start your journey from buiding 0 and move to adjacent building either using rope or bricks. You have limited number of bricks and ropes.
+While moving from ith building to (i+1)th building,
+
+
+if next building's height is less than or equal to the current buiding's height, you do not need rope or bricks.
+if next building's height is greater than current buiding's height, you can either use one rope or (h[i+1] - h[i]) bricks.
+So, question is How far can you reach from 0th buiding if you use bricks and ropes optimally? return index of building till which you can move.
+
+
+Example 1:
+
+
+Input : H = [4,2,7,6,9,11,14,12,8], b = 5, r = 2
+Output: 8
+Explanation: use rope to move from index 1 to index 2. 
+use 3 bricks to move from index 3 to index 4. 
+use 2 bricks to move from index 4 to index 5. 
+use rope to move from index 5 to index 6. 
+so we can reach at the end of the array using 2 ropes and 5 bricks. 
+Example 2:
+
+
+Input : H = [4,2,7,6,9,11,14,12,8], b = 5, r = 1
+Output: 5
+Explanation: use rope to move from index 1 to index 2. 
+use 3 bricks to move from index 3 to index 4. 
+use 2 bricks to move from index 4 to index 5. 
+so we can reach at index 5 using 1 ropes and 5 bricks. 
+
+https://leetcode.com/discuss/interview-question/1244429/Google-or-Phone-Interview-or-Org-Structure-Modification
+Google | Phone Interview | Org Structure Modification
+9
+Anonymous User
+Anonymous User
+Last Edit: June 1, 2021 12:36 PM
+
+1.9K VIEWS
+
+Given a tree of the organizational structure, let's say a company like "Google" .
+Also mentioned that the root is always Engineer.
+
+
+class Employee {
+int employeeId;
+boolean isEngineer;
+List reportees;
+}
+
+
+Given a tree
+
+
+							E1
+			________________|________________
+			|               |               | 
+		   E2              NE1             E3
+		___|___             |               
+		|     |             |               
+		E4    NE2           E5 
+Convert this graph to Engineer only graph.
+
+
+							E1
+			________________|________________
+			|               |               | 
+		   E2              E5               E3
+		   |                                                       
+		   E4               
+In the above figure, E represents Engineers and NE represents Non-Engineers.
+He also asked me to modify code at the end, also gave me an option to use a new graph or to modify the current graph.
+I used a new graph, he seemed convinced .
+
+google
+india
+google interview
+phone screening
+https://leetcode.com/discuss/interview-question/1249452/Conflicting-rules
+Conflicting rules
+2
+Anonymous User
+Anonymous User
+Last Edit: June 3, 2021 10:01 PM
+
+514 VIEWS
+
+Given a table of rules, write a function to check if it contains conflicting rules. Two rules are conflicting if their conditions match but values do not. Conditions can contain don't cares denoted by '-'. Has to be done in O(n) time.
+
+
+e.g
+Rule Conditions Value
+R1 C1,C2,C3 40
+R2 BCD1,BC5 40
+R3 BCD1,BC5 80
+Here, R2 and R3 conflict.
+e.g
+R1 C1,C2,C3 40
+R2 BCD1,BC5 50
+R3 BCD1,- 50
+R6 -,-,C3 40
+No conflicts.
+
+google
+interview
+india
+internship
+Comments: 4
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+Anurag1's avatar
+Anurag1
+
+6
+April 18, 2022 12:24 AM
+
+Read More
+At each node of trie also store the number of unique values exceeds one for its children or not and if it does not then store the value. In case of "-" in the string, the node which you reach for first occurrence of it will tell you if it is conflicting or not.
+
+
+The question is then how to build such a value. We need to implement DFS like traversal for adding a value in trie. Whenever we backtrack we update the precomputed values of the node.
+
+0
+Reply
+Share
+Report
+rao-1's avatar
+Rakesh Rav
+305
+June 5, 2021 1:12 AM
+
+Read More
+I tried for a solution using Trie, i came up with O(n) solution for well formed sequence. though i will try for don;t care conditions tomorrow later. but i thought till then i should post this so that you get some idea or you could try something with this approach
+https://leetcode.com/playground/eDUCntds
+
+
+please let me know if any test case for well formed sequence is not covered or any correction
+
+0
+Reply
+Share
+Report
+sakshi_wos's avatar
+Sasha
+104
+June 4, 2021 8:22 PM
+
+Read More
+One insight here is that the rules with higher number of don't cares need to be processed before the well-formed rules (of the same length). That's because we need to put a restriction on the well-formed rules after it that might satisfy it.
+We should process separate length rules in separate iterations, initialising a trie for each iteration (different length rules are not going to conflict anyway). Even when processing the rules of same length, we need to ensure the higher don't cares go into the trie first so we'll have to sort by the number of don't cares.
+We do two pass for each rule. First pass is validating the contents of the rule against existing contents. Second pass is insertion into the trie if needed.
+I tried to come up with a solution that wouldn't utilise sorting but I'm not able to process the strings in linear fashion then.
+OP can you rename the post title to Google | Intern | Conflicting Rules. More people will read your post and be able to help out.
+
+0
+Reply
+Share
+Report
+rao-1's avatar
+Rakesh Rav
+305
+June 4, 2021 12:20 AM
+
+Read More
+Can u explain in detail?
+
+0
+Show 7 replies
+Reply
+Share
+Report
+https://leetcode.com/discuss/interview-question/1250654/google-onsite
+google onsite
+15
+Anonymous User
+Anonymous User
+June 4, 2021 2:14 PM
+
+3.6K VIEWS
+
+Given a sorted n-size array, there are k elements have been changed i.e. [1, 3, 5, 6, 4, 2, 12] (it might be changed from [1, 3, 5, 6, 7, 8, 12] with k = 2). Important to know is that k is unknown and k is much smaller than n. The task is to re-sort the entire array.
+The interviewer wants O(n) solution. I bombed this one. In the end, the interviewer kind of fed the solution to me. What he suggested: a. break the array into two: one sorted array and one unsorted array e.g. [1, 3, 5, 12] and [6, 4, 2]. This takes O(n) b. Sort the unsorted array. This takes O(klogk) c. Merge two sorted arrays. This takes O(n). Because k is very small, so in the end O(n) + O(klogk) ~= O(n).
+Does this solution make sense to you ? In O(n) how can we split array into sorted and unsorted with unsorted arry being of size k?
+
+google
+india
+onsite
+google interview
+google-prep
+Comments: 16
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+sagarwal007's avatar
+Sumit Agarwal
+35
+June 4, 2021 5:51 PM
+
+Read More
+I found this stack overflow link https://stackoverflow.com/questions/62764861/how-to-sort-an-array-with-n-elements-in-which-k-elements-are-out-of-place-in-on which summarises the solution:
+
+
+Find elements which are not sorted by traversing the array.
+If an element was found which is larger than the next one, then either it or the following one are out of order (or both).
+Keep both of them aside, and remove them from the array.
+Continue traversing on the newly obtained array (after removal), from the index which comes before the found element.
+This will put aside 2k elements in O(n) time.
+Sort 2k elements O(klogk)
+Merge two sorted lists which have total n elements, O(n)
+Total O(n + klogk)
+For the above array, the resulting arrays will be - [1, 3, 12] and [5, 6, 4, 2] ( 2k elements ). I think the above will give O(n) in worst case if (k << n).
+
+17
+Show 4 replies
+Reply
+Share
+Report
+defcon1's avatar
+ncl
+
+155
+Last Edit: June 7, 2021 1:38 PM
+
+Read More
+One way to solve is to convert this into 23. Merge k Sorted Lists.
+
+
+Example: [[1, 3, 5, 6, 4, 2, 12]] can be split into 3 sorted lists, i.e. [[1,3,5,6],[4],[2,12]]
+The running complexity will be O(nlogk) though. Given k is much smaller than n, can it be considered almost linear?
+
+14
+Show 1 reply
+Reply
+Share
+Report
+jamin131's avatar
+jamin131
+
+64
+Last Edit: June 7, 2021 3:01 AM
+
+Read More
+Here is a python solution. Basic idea is we take first element of arr and store it in a sorted list and keep track of all unsorted elements in a separate array. Sort the second, and merge them together. Thought worst case would be nlogn if the max and min were the first two elements such as [14,1,4,5,2,3,10]
+
+
+arr = [1, 4, 5, 2, 3, 10, 12]
+
+def merge(arr):
+    first = [arr[0]] # creates a sorted array starting from the first index
+    second = [] # keeps track of any elements that are out of order
+    for i in range(1, len(arr)):
+        if arr[i] < first[-1]: second.append(arr[i])
+        else: first.append(arr[i])
+
+    second.sort() #klogk
+    res = []
+    i, j = 0, 0
+    # merge total of N elements
+    while i < len(first) and j < len(second):
+        if first[i] < second[j]:
+            res.append(first[i])
+            i += 1            
+        else:
+            res.append(second[j])
+            j += 1            
+
+    res.extend(first[i:len(first)])
+    res.extend(second[j:len(second)])
+
+    return res
+2
+Reply
+Share
+Report
+deleted_user's avatar
+deleted_user
+6534
+June 5, 2021 8:34 AM
+
+Read More
+I saw this same question in LeetCode in an interview experience. around Oct 2020 I guess. He couldn't make it further too.
+
+2
+Show 1 reply
+Reply
+Share
+Report
+yerlandinata's avatar
+yerlandinata
+182
+Last Edit: June 4, 2021 8:38 PM
+
+Read More
+k is much smaller is somewhat vague, if N=10^8, you can say that k=10^4 is much smaller, yet you cannot really claim that O(N) + O(k log k) ~= O(N)
+If k is very small, did you mention that insertion sort has time complexity of ~O(N) in a nearly sorted array? I can only imagine that splitting has space complexity of O(N) where insertion sort doesn't need any additional space
+
+2
+Show 1 reply
+Reply
+Share
+Report
+Miss_S's avatar
+Miss S
+109
+September 26, 2021 1:56 AM
+
+Read More
+  private static int[] sort(int[] array){ //Time: O(n+klogk), Space: O(n)
+    List<Integer> sorted = new ArrayList();
+    List<Integer> unsorted = new ArrayList();
+    for(int i=0;i<array.length;i++){
+        if(sorted.size()==0 || sorted.get(sorted.size()-1)<=array[i]){
+            sorted.add(array[i]);
+        }else{
+            int last = sorted.get(sorted.size()-1);
+            sorted.remove(sorted.size()-1);
+            unsorted.add(last);
+            unsorted.add(array[i]);
+        }
+    }
+    Collections.sort(unsorted);
+    int i=0,j=0;
+    int[] result = new int[array.length];
+    int idx = 0;
+    while(i<sorted.size() || j<unsorted.size()){
+        if(j==unsorted.size() || (i<sorted.size() && sorted.get(i)<unsorted.get(j))){
+            result[idx++] = sorted.get(i++);
+        }else{
+            result[idx++] = unsorted.get(j++);
+        }
+    }
+    return result;
+}
+1
+Show 1 reply
+Reply
+Share
+Report
+playboy9817's avatar
+Zhenyi Li
+689
+June 25, 2021 4:40 PM
+
+Read More
+if this is almost sorted array, insertion sort would be the best choice, just mention that
+
+1
+Reply
+Share
+Report
+hachi2017's avatar
+hachi2017
+
+232
+March 6, 2022 3:00 PM
+
+Read More
+Move your pointer from the left until u see a dip(valley instead of a non decreasing order)
+This is the start index of the un sorted array
+Also note the last number that was in the right place (6 in your above example)
+Now walk from the left until u see
+a. Either a value that's increasing OR
+b. A value that is smaller than the stored element in 3.
+This is the end index of the unsorted array
+Pull that out . Sort it in klogk
+Then go ahead and merge 2 sorted lists in o(n)
+0
+Reply
+Share
+Report
+sreejithpin's avatar
+Sreejith .P
+
+0
+November 23, 2021 10:57 PM
+
+Read More
+How would that work? If the changed one is much bigger then the second array will be all the elements after that which wouldn’t be of size k. And there will be multiple
+
+0
+Reply
+Share
+Report
+Jack-Sparrow's avatar
+Selva
+
+9
+June 20, 2021 10:03 PM
+
+Read More
+bucket sort might be intuition, did you try that OP?
+
+0
+Reply
+Share
+Report
+https://leetcode.com/discuss/interview-question/1278518/Google-or-SDE-Backend-or-India-or-May-2021
+Google | SDE - Backend | India | May 2021
+49
+Anonymous User
+Anonymous User
+Last Edit: June 17, 2021 2:43 PM
+
+4.6K VIEWS
+
+Google | SDE - Backend | Bengaluru | May 2021 [Reject]
+
+
+Status: 2 YOE
+Position: SDE at a midsize company
+Location: Bengaluru, India
+
+
+How I got the interview?
+I reached out to a recruiter who had posted on linkedin that google was looking for backend developers. I sent the recruiter a cold email with my resume. I was almost certain this was a waste of time as most of the recruiters who I had sent such mails never replied back. But, this recruiter did. The recruiter set up a 30 min call just to know my background. We had a good talk about the projects im currently working on and about my experiences. After the call my phone screen was set up. They gave me suffeciant time to prepare. Truly, Google recruiters are a class apart. They gave me study material etc.
+
+
+Phone Screen (2 weeks after the Recruiter Call): 45 mins
+
+
+The inter viewer and I had a brief discussion for about 5 mins about my background and then we dove right into the porblem statement. It was a medium/hard string search and manipulation problem. Came up with a solution within 15 min. Wrote the code in the next 10 mins and ran one dry test case. The interviewer was very poker faced and didnt give out much. The question is going to be ambigous. Always discuss with the interviewer. Tell the interviewer whatever you are thinking. Google has their own interview notepad++ kind of thing and they dont use google docs anymore but its very similar. Just syntax highlighting will be there.
+
+
+After a week of anxiety I got a call from my recruiter that I had cleared the phone screen round. I was super joyed. I was given another 2 weeks to prepare for the virtual onsite interview. They scheduled only 2 rounds of the onsite and said only if I cleared this the next 2 rounds would be unlocked.
+
+
+Virtual On-site: 45 mins each
+Round 1: The interviewer was little grumpy and dove straight into the question. It was 90% math problem and 10% DS/Algo problem. Question was related to changing probabilty based on an event occuring or not. And with each event occuring the probabilty of the event happening will change based on the circumstances in which it occured. So given a list of such events I needed to find the final probability of the event occuring.
+By the time I recollected all the probabilty I learnt in high school and Pre University, half the time was up. The interviewer did help a little but still I was very blank. I started to freak out. By the time I orally solved the problem there was only 10 mins left. I could not complete the code. The interviewer just said that he got where I was going with the code and ended the interview.
+
+
+Round 2: This interviewer was smiling and seemed like a nice person. She introduced herself and then we dove into the problem. She even explained the problem statement. It was more or less related to the card game SET, with a little variation. After going about the brute force way, I found a more optimal solution and she was happy with it. She asked me to code the solution I came up with. It took me 5 mins to write the code. She asked me a follow up question. It was on lines of what if a joker card was introduced the cards. It was a pretty simple variation. I told her the solution and she told me to make changes to the code. I did and the interview time was almost up. After that it was justa bunch of chit chatting and the the interview was done.
+
+
+2 days later I got the call from the recruiter saying they are not moving forward with my profile. I honestly was expecting another round of interviews as my 2nd round went considerabaly well but sadly I didnt get any. I will update this post on the feedback I receive from the recruiter.
+
+
+Preperation for me was just leetcode. I bought leetcode premium a while ago and I completed the google track. Dont let the tag of google scare you, it is honestly simpler than you think. Anyways will keep trying, on to more leetcoding.
+
+
+PS: yes leetcode premium is worth it if you are seriously thinking of interviewing or if you have interviews lined up. If its is just pre job-applying interview prep then no need of premium.
+
+google
+india
+onsite
+phone screening
+google-interview
+Comments: 6
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+vinit-dash's avatar
+vinit-dash
+
+76
+June 17, 2021 10:58 PM
+
+Read More
+Really sad that you were tested on Maths, rather than DS/Algo. Just bad luck. Don't worry, keep on trying. One day, you'll definitely become a noogler :)
+
+23
+Reply
+Share
+Report
+zerojude's avatar
+aditya raghav
+
+509
+Last Edit: June 17, 2021 4:14 PM
+
+Read More
+if you don't mind. can you share the resource's(study material) the recruiter gave you it will help those who are preparing. thanks in advance
+
+1
+Show 6 replies
+Reply
+Share
+Report
+srt1104's avatar
+srt1104
+18
+June 18, 2021 6:44 AM
+
+Read More
+Where can I study the Maths required for such interviews and solve questions of the same? Is it even worth the time?
+
+1
+Show 1 reply
+Reply
+Share
+Report
+iec073's avatar
+iec073
+45
+June 17, 2021 9:09 PM
+
+Read More
+Please share phone screening question in a bit detail or may be leetcode link to that code
+
+0
+Show 1 reply
+Reply
+Share
+Report
+Anandhanatarajan's avatar
+Anandhanatarajan
+
+372
+June 18, 2021 9:46 PM
+
+Read More
+Thanks for sharing!!!!Can you please share how many Google Tagged questions have you solved???Like 6 months Google Tagged questions???or 1 year??
+
+0
+Reply
+Share
+Report
+del1c1ous's avatar
+delicious
+131
+June 17, 2021 9:23 PM
+
+Read More
+Thanks for sharing. According to my knowledge about Google's recruitment, your bad 1st round would have haunted you & your result even if you had been selected for further rounds.
+
+-4
+Reply
+Share
+Report
+https://leetcode.com/discuss/interview-question/1285431/Google-Interview-Questions
+
+Google Interview Questions
+0
+Anonymous User
+Anonymous User
+June 20, 2021 5:59 PM
+
+2.7K VIEWS
+
+Round-4 (Technical Interview Round-3)
+Q. a) There are n jobs, you have to schedule the jobs on a machine. Given the job start time and duration. Schedule the jobs is best optimal way.
+b) In continuation of the above question, there are k machines. Schedule the jobs in the most optimal way.
+
+google
+india
+onsite
+google interview
+google-prep
+Comments: 6
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+leotreim's avatar
+Akshay Mendole
+28
+June 23, 2021 9:46 PM
+
+Read More
+sounds like https://leetcode.com/problems/single-threaded-cpu/ for part a
+
+3
+Reply
+Share
+Report
+zerojude's avatar
+aditya raghav
+
+509
+June 20, 2021 8:40 PM
+
+Read More
+we should find the optimal solution on what basis? I mean whats the cost associated with choosing or not choosing an interval at a given time
+
+1
+Show 2 replies
+Reply
+Share
+Report
+Anonymous User
+Anonymous User
+June 20, 2021 6:00 PM
+
+Read More
+Mainly I want to know how to solve part b
+
+0
+Reply
+Share
+Report
+Miss_S's avatar
+Miss S
+109
+September 25, 2021 2:55 AM
+
+Read More
+ques b similar to https://leetcode.com/problems/process-tasks-using-servers/
+
+0
+Reply
+Share
+Report
+playboy9817's avatar
+Zhenyi Li
+689
+June 25, 2021 4:35 PM
+
+Read More
+seems like meeting room question, sort the job by finish time and run greedy algorithm
+
+0
+Reply
+Share
+Report
+venom_11's avatar
+venom
+158
+June 26, 2021 8:12 AM
+
+Read More
+The question is missing this info
+
+
+Do the jobs have a start time and end time?
+Do the jobs have a time period with them that they take to complete?
+https://leetcode.com/discuss/interview-question/1317887/Google-OA
+Google OA
+23
+Anonymous User
+Anonymous User
+Last Edit: October 13, 2021 4:24 PM
+
+15.7K VIEWS
+
+I have given Google Online Coding Challenge recently. There were 2 questions
+
+
+First one was largest element from here: https://leetcode.com/discuss/interview-question/887761/google-swe-intern-oa-sea (20 points)
+https://leetcode.com/discuss/interview-question/889942/any-idea-how-to-solve-this-problem-i-just-bombed-it-in-an-interview (30 points)
+10 on 10 testcases passed for first, only 5 on 10 passed for second.
+Should I expect a call for further rounds ?
+
+
+UPDATE 1: Got the call for further rounds !
+
+
+UPDATE 2: I had following rounds till now:
+
+
+Telephonic screen
+Onsite 1 coding
+Onsite 2 coding
+Onsite 3 coding
+Onsite 4 googleyness
+Onsite 5 coding
+
+
+2 FIT calls
+The feedback for 2 rounds out of 5 onsite was borderline. So, recruiter got statement of support from manager. Waiting for further update from recuiter.
+
+google
+india
+online assesment
+Comments: 10
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+agentneutron's avatar
+Ankit
+54
+July 6, 2021 5:42 PM
+
+Read More
+2nd problem will be solved by priority_queue by sorting delivery cost.
+This question is same as - https://leetcode.com/problems/maximum-performance-of-a-team/
+
+4
+Reply
+Share
+Report
+gauravmehta's avatar
+naruto
+
+71
+July 7, 2021 12:02 PM
+
+Read More
+for which location you had applied?
+
+2
+Show 1 reply
+Reply
+Share
+Report
+AbSb's avatar
+AbSb
+
+181
+July 6, 2021 6:07 PM
+
+Read More
+are you a new grad (2021) ? when did you apply ?
+
+2
+Show 2 replies
+Reply
+Share
+Report
+Ratul_Roy_2001's avatar
+itz_Rio
+
+14
+May 22, 2024 5:34 AM
+
+Read More
+wait guys i have a doubt if any 1 of the problem is solved can i get into next round in OA s ??
+
+0
+Reply
+Share
+Report
+codebreaker176's avatar
+Sanjana R
+
+31
+February 7, 2022 10:06 PM
+
+Read More
+can you tell what was asked in phone screening round
+
+0
+Reply
+Share
+Report
+AbSb's avatar
+AbSb
+
+181
+February 4, 2022 9:01 PM
+
+Read More
+how did you solve the first question?
+
+0
+Reply
+Share
+Report
+sarthakshagun25's avatar
+sarthakshagun25
+0
+October 23, 2021 2:22 AM
+
+Read More
+can you share pls question for Telephonic screening round?
+
+0
+Reply
+Share
+Report
+priyadarshini27's avatar
+Priyadarshini Mitra
+
+22
+October 17, 2021 7:21 AM
+
+Read More
+Can you tell us the solution for the first problem ? Is there a leetcode question similar to that ?
+
+0
+Reply
+Share
+Report
+Kabir_1506's avatar
+Kishor Prasad
+
+304
+October 13, 2021 1:08 PM
+
+Read More
+Any updates?
+
+0
+Show 1 reply
+Reply
+Share
+Report
+feuerfawkes's avatar
+FeuerFawkes
+546
+July 25, 2021 6:39 AM
+
+Read More
+Location?
+https://leetcode.com/discuss/interview-question/887761/google-swe-intern-oa-sea
+Google SWE Intern OA (SEA)
+30
+jiale1029's avatar
+Tan Jia Le
+
+30
+Last Edit: October 10, 2020 9:07 PM
+
+10.0K VIEWS
+
+Hi all,
+
+
+Sharing the two questions I encountered during my SWE Intern OA, platform was on HackerRank and time limit is 60 minutes for 2 questions. Was able to solve the first one but didn't have sufficient time for the second time (not sure whether I was correct as well), will be glad if anyone can give some hint regarding q2.
+
+
+(1) The Largest Element
+
+
+We are supposed to find out absolute difference of these distinct values, and since the absolute difference must be within the range of min(arr) and max(arr). If we want to retrieve the Kth largest element, we can do max(arr)-K if K is less than max(arr).
+
+
+image
+
+
+(2) Minimum Cost Connections
+Didn't have enough time to figure out the solution (I'm not too good at solving graph/dp questions also), was trying to do backtracking but probably will get TLE as well, felt like I've seen this question somewhere before but still wasn't able to solve it. Would be great if someone can give me some directions for this question.
+
+
+image
+
+
+Input follows the input format.
+5
+12 7 8 24 2 7
+6 5 12 4 8 7
+5
+1 2
+2 3
+4 2
+5 4
+
+
+Ans: (7+6)[From City 6 to City 1] + (7+8)[From City 6 to City 5] = 13 + 15 = 28
+
+
+image
+
+google
+internship
+singapore
+google-sea
+Comments: 20
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+gerrob's avatar
+Robert Gerbicz
+1079
+October 11, 2020 5:25 PM
+
+Read More
+Fast solution of Q1, doing only n times a gcd call. Observe that in the final array the minimal integer what we can get is the gcd of all numbers. If that is g=gcd(v[0],v[1],..v[n-1]) and the maximal number is m in the input vector then all numbers will be m-t*g in the final array, where t>=0 integer, hence the answer is just m-(K-1)*g if and only if it is positive.
+
+
+class Solution{
+    
+public:
+    
+    int gcd(int x,int y){
+        return y==0?x:gcd(y,x%y);
+    }
+    
+    int solve(vector<int> v,int K){
+        
+        int g=v[0];
+        int m=v[0];
+        for(int x:v){
+            g=gcd(g,x);
+            m=max(m,x);
+        }
+        
+        // ans=m-(K-1)*g>0
+        long ans=m;
+        ans-=(long) (K-1)*g;
+        return (ans>0?ans:-1);
+    }
+};
+
+int main(void){
+    
+    Solution *s=new Solution;
+    cout<<s->solve({1,3,5,6,7},2)<<endl;
+    cout<<s->solve({1},2)<<endl;
+    cout<<s->solve({1,3,5,6,7},6)<<endl;
+    
+    return 0;
+}
+/* 
+output
+6
+-1
+2
+*/
+29
+Show 4 replies
+Reply
+Share
+Report
+gerrob's avatar
+Robert Gerbicz
+1079
+Last Edit: October 11, 2020 3:41 AM
+
+Read More
+The solution of Q2 (only the algorithm), to solve it in linear time, so in O(V+E).
+the drawn pictures: https://imgur.com/a/DHl7qZ3
+case1.
+First suppose that in G there is no directed cycle:
+In that case let u[1],u[2],...,u[k] the vertices from 1..N with income degree=0. Since we have to reach them
+we surely need to use (at least) k new added edges that ends in these points, the (income) cost of these is
+s2=cost2[u[1]]+cost2[u[2]]+...+cost2[u[k]].
+Then let t that point from the cost is the smallest, so t=argmin(cost1[1],cost1[2],...,cost1[N+1]).
+If t=N+1, then bingo, the answer is s2+k*cost1[N+1], so add the (N+1,u[i]) edges to the graph. (see first picture)
+Else, so if t<=N, then let t reachable from u[p], then add (N+1,u[p]) to the graph and
+(t,u[i]) for all i!=p, the total cost of this is s2+cost1[N+1]+(k-1)*cost1[t]. (see 2nd pic)
+
+
+case2.
+There are directed cycles in the graph. Good, detect them and contract it with the following way:
+if v[1],...,v[k] is in a strongly connected component (SCC), then replace the whole component with a single P point. And update cost1[P]=min(cost1[v[1]],cost1[v[2]],..,cost1[v[k]]), and cost2[P]=min(cost2[v[1]],cost2[v[2]],...,cost2[v[k]]). At the end there will be no directed cycle in the graph, hence you can apply case1. (see 3rd pic)
+
+26
+Show 4 replies
+Reply
+Share
+Report
+abc132's avatar
+Jorge Branco
+84
+July 5, 2021 9:25 PM
+
+Read More
+I absolutely hate the wording and the way they wrote down the problems. It seems to require multiple passes at reading to get clearly get what they mean... I find the kind of problem statements found here on leetcode a lot clearer.
+
+9
+Show 1 reply
+Reply
+Share
+Report
+tejas512's avatar
+tejas512
+28
+October 10, 2020 5:25 PM
+
+Read More
+it would be great if you can add test cases of question 2.
+
+5
+Show 1 reply
+Reply
+Share
+Report
+ppg29's avatar
+Pratham
+
+181
+Last Edit: July 6, 2021 12:58 PM
+
+Read More
+Shouldn't the answer for the given example of Q2 be 23, instead of 28?
+
+
+Since our aim is to connect city 6 to all the remaining cities (i.e 1 to 5), we can first have a directed edge from city 6 to city 5, and then a directed edge from city 5 to city 1, instead of a directed edge from city 6 to city 1 (as done in the example).
+
+
+So, the actual cost will be ->
+cost of outward edge from city 6, which is equal to 7
+cost of inward edge to city 5, which is equal to 8
+cost of outward edge from city 5, which is equal to 2
+cost of inward edge to city 1, which is equal to 6
+
+
+net sum of all cost = 7+8+2+6 = 23
+
+3
+Show 1 reply
+Reply
+Share
+Report
+jnatarajan's avatar
+Janani
+
+1
+September 11, 2023 10:48 AM
+
+Read More
+For Q2, why not add edges from city N+1 to all nodes with indegree = 0. Will that not solve the problem?
+
+1
+Reply
+Share
+Report
+priyadarshini27's avatar
+Priyadarshini Mitra
+
+22
+Last Edit: October 17, 2021 7:38 AM
+
+Read More
+For question 1 (largest element), are we supposed to loop through n*2 times and for every i!=j add the element in the array if not present and after the end of this looping , use a max heap to get the k th largest element. Please let me know if my solution is correct ! Thanks
+
+1
+Show 2 replies
+Reply
+Share
+Report
+hhasti's avatar
+harish hasti
+
+4
+July 31, 2022 2:26 AM
+
+Read More
+Solution for Q1
+We only need kth largest element
+So lets assume we have k<n-1
+So we need to take the max element say 7 in this case and get k-1 largest element
+k-1 can only be produced by the difference of max element and k-1 th min element of that round here 1st min which is 1
+hence max-min = 7-1=6 is the answer
+
+1
+Reply
+Share
+Report
+Neuring's avatar
+Lirus
+-2
+Last Edit: October 11, 2020 6:19 PM
+
+Read More
+For the second problem.
+Algorithm:-
+
+
+Get the strongly connected components of the graph.
+Compress the graph, one node as one component.
+3.Calculate the min_cost of making an edge. i.e. iterate over all the nodes in one component.
+Do step 3 for all the components.
+This should prolly give you the answer.
+1
+Reply
+Share
+Report
+vorpalsort's avatar
+Aidan
+11
+October 10, 2020 11:56 PM
+
+Read More
+Trying to understand what the second questions is asking, because it seems like you just need to pick the lowest cost road TO and road FROM N that connects N to any of (1->N-1).
+
+0
+Show 1 reply
+Reply
+Share
+Report
+Copyright © 2024 LeetCode
+Help Center
+Jobs
+Bug Bounty
+Online Interview
+Students
+Terms
+Privacy Policy
+United StatesUnited States
+https://leetcode.com/discuss/interview-question/889942/any-idea-how-to-solve-this-problem-i-just-bombed-it-in-an-interview
+Any idea how to solve this problem? I just bombed it in an interview.
+14
+Anonymous User
+Anonymous User
+Last Edit: October 11, 2020 10:01 PM
+
+7.5K VIEWS
+
+You have n items, cost is c(i) and delivery cost is d(i). If customer orders more than one item, then they get it for the minimum delivery cost. How do you find the maximum amount of money you can make after delivering m items? I know this is a knapsack problem, but I just can't find a way to solve it. And I want to make sure I am able to solve these problems for future interviews.
+
+
+For e.g.
+cost and delivery cost respectively (first column being cost, second being delivery cost):
+Item 1: 7, 10
+Item 2: 4, 15
+Item3: 8, 1
+
+
+m = 2
+
+
+Input format (java): int n, int m, int[][] arr where n is the total number of items, m is the maximum number of items you can deliver, arr has each row with first element being cost, second being delivery cost.
+
+
+Output: 31 (You choose the first two items because if you chose the 3rd item, the delivery cost for 2 items would be 1 + 1 (since 1 is the mimimum delivery cost) so you would end up with 23 + 2 = 25.
+
+Comments: 10
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+chirano's avatar
+Abhinav Bansal
+
+76
+Last Edit: July 6, 2021 5:40 PM
+
+Read More
+This problem will be solved by priority_queue by sorting by delivering cost.
+This question is same as this question- https://leetcode.com/problems/maximum-performance-of-a-team/
+How you got the idea to do this with knapsack 🥴
+
+https://leetcode.com/discuss/interview-question/1394104/Google-or-Onsite-or-SWE
+Google | Onsite | SWE
+7
+Anonymous User
+Anonymous User
+August 10, 2021 4:48 AM
+
+3.6K VIEWS
+
+Both these questions were asked to me in one of the onsite rounds for the Google SWE role.
+
+
+Q1: Given some source code and a set of keyword substitutions, return the source code after performing all the substitutions. In other words, all occurences of a keyword X should be substituted by another keyword Y and multiple such pairs are provided.
+A1: This was a straightforward coding question; the interviewer was focused on code correctness and edge case handling and not on algorithmic complexity.
+
+
+Q2: A very similar question to this: https://leetcode.com/problems/rotting-oranges/
+
+
+Personal Experience: Managed to solve both the questions however the interviewer had to point some edge case misses for the first one.
+
+
+Advice: Get into the habit of double checking your code as you're writing it and DO NOT give any opportunity for the interviewer to point out bugs/mistakes because this can mean the difference between a good hire and a weak hire.
+
+google
+india
+onsite
+https://leetcode.com/discuss/interview-question/1408410/Sprinklr-IIT-Madras-R1
+Sprinklr IIT Madras R1
+2
+Anonymous User
+Anonymous User
+August 17, 2021 11:45 AM
+
+865 VIEWS
+
+The test was for 2 hrs and had 3 questions.
+
+
+Given a circular array, find the subarray of a certain length k which has the larget sum.
+Given an array of points on XY plane, find the largest number of points which lie on a line.
+Given a NxN matrix, find the maximum of all KxK submatrices in it and store them. Then with respect to another number, find the number of maximums which are larger than t and the maximum which is closest to t
+
+https://leetcode.com/discuss/interview-question/1413670/Google-Interview-or-Aug-2021
+
+Explore
+Problems
+Contest
+Discuss
+Interview
+Store
+0
+
+avatar
+Back
+Google Interview | Aug 2021
+11
+Anonymous User
+Anonymous User
+Last Edit: August 20, 2021 10:55 PM
+
+2.5K VIEWS
+
+The interview was of 40 minutes and asked the below two questions.
+
+
+Flip a given byte array containing monochrome bit values of an image.
+You are given a single dimensional byte array, width and height.
+Here they wanted me to consider a 2D image saved in an single dimension array. Using the given width and height, we can actually consider the 1D array as a combination of multiple rows of an 2D array ( image ). I wrote a function to flip it with that particular logic. The interviewer was happy with the answer, but he also asked me to consider the minute details such as "monochrome image" and I will have to also flip the granular bits in the byte array. I was not familiar with bit and byte manipulation, hence we moved to another question.
+
+
+An easy question, find the shortest path from (0, 0) to (m-1, n-1) of a 2 D matrix filled with 1's and 0's. You can travel through a 0 and not a 1.
+Update to question: After I solved this question, he modifed the question by a bit. He told me to find the shortest possible path by flipping a single '1'. i.e, You can at max flip a single '1', and that should give me the minimum shortest distance. I couldn't crack that in the remaining time left.
+
+
+Job Location: India
+
+
+PS: Can some one share the links to these problems?
+
+
+Thanks @sriramahanuma for sharing the Question 2 problems
+First part of Question 2: https://leetcode.com/problems/shortest-path-in-binary-matrix/
+Second part of Question 2: https://leetcode.com/problems/shortest-path-in-a-grid-with-obstacles-elimination/
+
+google
+bfs
+india
+bit manipulation
+Comments: 7
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+sriramahanuma's avatar
+batu
+64
+Last Edit: August 19, 2021 11:29 PM
+
+Read More
+Q2 https://leetcode.com/problems/shortest-path-in-binary-matrix/
+follow up https://leetcode.com/problems/shortest-path-in-a-grid-with-obstacles-elimination/
+
+8
+Show 1 reply
+Reply
+Share
+Report
+rahul5's avatar
+rahul masurkar
+181
+August 19, 2021 11:06 PM
+
+Read More
+could you provide some example for question 1?
+
+2
+Reply
+Share
+Report
+satyakic's avatar
+satyakic
+
+49
+August 21, 2021 5:50 AM
+
+Read More
+phone or onsite?
+
+1
+Show 1 reply
+Reply
+Share
+Report
+ashutoshcric's avatar
+Ashutosh
+
+18
+August 19, 2021 9:44 PM
+
+Read More
+For the follow up to the second question:
+
+
+Use standard BFS solution tracking the following (cur_distance, cur_pos, number_of_1s_flipped).
+At every position, if it's possible to reach the unvisited neighbours without number_of_1s_flipped exceeding 1, push them in the queue.
+If we reach the destination, return the cur_distance.
+1
+Reply
+Share
+Report
+Ptoshniw's avatar
+Ptoshniw
+0
+July 26, 2022 2:59 AM
+
+Read More
+Can you post a solution or pseudo code for the first question -
+
+
+Flip a given byte array containing monochrome bit values of an image.
+You are given a single dimensional byte array, width and height.
+Here they wanted me to consider a 2D image saved in an single dimension array. Using the given width and height, we can actually consider the 1D array as a combination of multiple rows of an 2D array ( image ). I wrote a function to flip it with that particular logic. The interviewer was happy with the answer, but he also asked me to consider the minute details such as "monochrome image" and I will have to also flip the granular bits in the byte array. I was not familiar with bit and byte manipulation, hence we moved to another question.
+
+0
+Show 1 reply
+Reply
+Share
+Report
+ranjuchhatna's avatar
+Sachin Agarwalla
+
+18
+August 24, 2021 6:46 PM
+
+Read More
+your first question is not clear. you can please explain it more or provide any link?
+
+0
+Reply
+Share
+Report
+SteadyProgrammerSachin's avatar
+Sachin Verma
+
+17
+August 20, 2021 11:46 AM
+
+Read More
+For question 1, did you get some sample input/output?
+
+https://leetcode.com/discuss/interview-question/1490881/Chances-of-google-L4
+Chances of google L4
+2
+Anonymous User
+Anonymous User
+Last Edit: November 26, 2021 6:35 PM
+
+4.8K VIEWS
+
+I recently interviewed for google L4 India. I got following feedbacks:
+
+
+Round 1 (telephonic): Hire
+Round 2: Strong hire
+Round 3: Weak unhire
+Round 4 (googlyness): strong hire
+Round 5: Weak hire
+
+
+what are my chances to get the L4 role?
+
+
+UPDATE:
+
+
+lot of people asking me the interview questions. I ll say among all interviews I gave google ll ask the easiest questions. You need to focus on getting code correct in one shot. If you are able to do that you are selected. Hardest round will be round 1 which is telephonic round. If you get rejected there then not a problem you can re-apply. If you are rejected in onsite then you loose one chance out of 3. But telephonic rounds are easy. To me they asked:
+
+
+telephonic:
+find lowest comman weight path between 2 nodes in a tree. Simply a modification of LCA.
+
+
+Onsite 1:
+find number of islands in a matrix with 0 and 1.
+Followup:
+https://cses.fi/problemset/task/1192
+strong hire feedback here. Was able to solve and implement both of the questions in 40 mins. 5 mins still remaining.
+
+
+Onsite 2:
+probably easiest yet I got paniced and messed this one. Split a given string based on space. Next part was to split it based on space but exclude spaces that are preceeded by "". That is if input is: "I love leet\ code" output ll be {"I", "love", "leet code"}. Basically you need to come with test cases in this problem. i missed cases like "I love \\ leetcode". The problem was more on forming test cases.
+
+
+Onsite 3:
+Probably the hardest question that was asked yet not too hard. Was able to clear that but code missed some test cases. I was able to cover those in next 30 seconds but feedback got lean hire since code that I gave did not work in one go. So lot of nit picks. (i wont type the question since it is too long to type and I am too lazy).
+
+
+My takes:
+
+
+google isnt hard except telephonic.
+Calmness while solving is the key. Solving mid level questions on LC ll do the job.
+Luck has a greater role to play here.
+The interviews are unfair, they test requirement gathering and all just with single question. That too in 45 minutes. Expect no hints. If you are taking then don't expect selection.
+The videos on google interview saying that we ask brute force and then optimize is totally wrong. The videos that say google looks for approach are also wrong. You have to solve question in 45 minutes and the code that you wrote should be correct in one go. If not then you are out.
+Prefer C++ or python over Java. If you use java type really fast.
+You may say that no it is not the case, then I ll say cross check by giving the interview and tell me in comments.
+
+google
+india
+google interview
+Comments: 9
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+__init__py's avatar
+dummy_variable
+81
+October 7, 2021 11:07 PM
+
+Read More
+from where did you get this feedback ? Recruiter generally don't say about rating on each and every round.
+
+5
+Show 1 reply
+Reply
+Share
+Report
+chopsach's avatar
+Sachin Chopra
+15
+September 29, 2021 2:28 AM
+
+Read More
+Downlevel to l3 because of that weak unhire.
+
+5
+Reply
+Share
+Report
+perpetual_pupil's avatar
+perpetual_pupil
+24
+Last Edit: October 6, 2021 11:12 AM
+
+Read More
+Typically from what I've read on blind, a weak no-hire can be compensated with a strong hire in other rounds.
+
+
+What was the difficulty level of the questions and how many questions per round did you have to solve?
+
+https://leetcode.com/discuss/interview-question/913786/Asked-in-Google
+Asked in Google
+0
+Anonymous User
+Anonymous User
+Last Edit: October 28, 2020 9:04 PM
+
+2.0K VIEWS
+
+Sophie gives a list of numbers to her five-year-old daughter and explains four types of operations that she can perform on this list. Sophie also gives her a list that shows the sequence in which these operations can be performed. Each operation is performed on the output of the previous operation.
+
+
+Operation 1: Add a value V to all the numbers in the list from index X to Y.
+Operation 2: Subtract the value V from all the numbers in the list from index X to Y.
+Operation 3: Initialize all the numbers in the list from index X to Y with the value V.
+Operation 4: Find the sum of all the values in the list from index X to Y and add that sum to all the elements in the list.
+
+
+Write an algorithm to help Sophie’s daughter perform the operations and output the final li st of numbers.
+
+
+Input
+The first line of the input consists of two space-separated integers - N and P representing the size of the list provided by Sophie and the number of operations to be performed on the list, respectively.
+The second line consists of N space-separated integers - num1, num2, ..., numN , representing the numbers of the list provided by Sophie.
+The next P lines consist of four space-separated integers - op, X, Y and V, representing the type of operation; the start and end index of the range of numbers on which the operations must be performed; and the value that will be used to perform the operation, respectively.
+
+
+Output
+Print N space-separated integers representing the final list after performing all the operations.
+
+
+Constraints:
+1 ≤ N ≤ 105
+1 ≤ P ≤ 105
+1 ≤ V ≤ 105 , if op != 4
+V = 0 , if op = 4
+-105 ≤ numi ≤ 105
+1 ≤ i ≤ N
+
+
+Note
+As the output of an operation on the number of the list can be very large, modulo it by 1000000007.
+
+
+Example
+Input:
+6 5
+20 13 4 5 8 10
+1 2 3 2
+3 1 4 1
+2 5 6 5
+4 1 6 0
+3 2 4 2
+
+
+Output:
+13 2 2 2 15 17
+
+
+Explanation:
+The input list = 20 13 4 5 8 10.
+After the first operation, the list is 20 15 6 5 8 10.
+After the second operation, the list is 1 1 1 1 8 10.
+After the third operation, the list is 1 1 1 1 3 5.
+After the fourth operation, the list is 13 13 13 13 15 17.
+After the fifth operation, the final list is 13 2 2 2 15 17.
+https://leetcode.com/discuss/interview-question/913788/Asked-in-Adobe-Interview
+Asked in Adobe Interview
+-8
+Anonymous User
+Anonymous User
+October 28, 2020 8:36 PM
+
+1.9K VIEWS
+
+Sophie gives a list of numbers to her five-year-old daughter and explains four types of operations that she can perform on this list. Sophie also gives her a list that shows the sequence in which these operations can be performed. Each operation is performed on the output of the previous operation.
+
+
+Operation 1: Add a value V to all the numbers in the list from index X to Y.
+Operation 2: Subtract the value V from all the numbers in the list from index X to Y.
+Operation 3: Initialize all the numbers in the list from index X to Y with the value V.
+Operation 4: Find the sum of all the values in the list from index X to Y and add that sum to all the elements in the list.
+
+
+Write an algorithm to help Sophie’s daughter perform the operations and output the final li st of numbers.
+
+
+Input
+The first line of the input consists of two space-separated integers - N and P representing the size of the list provided by Sophie and the number of operations to be performed on the list, respectively.
+The second line consists of N space-separated integers - num1, num2, ..., numN , representing the numbers of the list provided by Sophie.
+The next P lines consist of four space-separated integers - op, X, Y and V, representing the type of operation; the start and end index of the range of numbers on which the operations must be performed; and the value that will be used to perform the operation, respectively.
+
+
+Output
+Print N space-separated integers representing the final list after performing all the operations.
+
+
+Constraints:
+1 ≤ N ≤ 105
+1 ≤ P ≤ 105
+1 ≤ V ≤ 105 , if op != 4
+V = 0 , if op = 4
+-105 ≤ numi ≤ 105
+1 ≤ i ≤ N
+
+
+Note
+As the output of an operation on the number of the list can be very large, modulo it by 1000000007.
+
+
+Example
+Input:
+6 5
+20 13 4 5 8 10
+1 2 3 2
+3 1 4 1
+2 5 6 5
+4 1 6 0
+3 2 4 2
+
+
+Output:
+13 2 2 2 15 17
+
+
+Explanation:
+The input list = 20 13 4 5 8 10.
+After the first operation, the list is 20 15 6 5 8 10.
+After the second operation, the list is 1 1 1 1 8 10.
+After the third operation, the list is 1 1 1 1 3 5.
+After the fourth operation, the list is 13 13 13 13 15 17.
+After the fifth operation, the final list is 13 2 2 2 15 17.
+https://leetcode.com/discuss/interview-question/913786/Asked-in-Google
+Asked in Google
+0
+Anonymous User
+Anonymous User
+Last Edit: October 28, 2020 9:04 PM
+
+2.0K VIEWS
+
+Sophie gives a list of numbers to her five-year-old daughter and explains four types of operations that she can perform on this list. Sophie also gives her a list that shows the sequence in which these operations can be performed. Each operation is performed on the output of the previous operation.
+
+
+Operation 1: Add a value V to all the numbers in the list from index X to Y.
+Operation 2: Subtract the value V from all the numbers in the list from index X to Y.
+Operation 3: Initialize all the numbers in the list from index X to Y with the value V.
+Operation 4: Find the sum of all the values in the list from index X to Y and add that sum to all the elements in the list.
+
+
+Write an algorithm to help Sophie’s daughter perform the operations and output the final li st of numbers.
+
+
+Input
+The first line of the input consists of two space-separated integers - N and P representing the size of the list provided by Sophie and the number of operations to be performed on the list, respectively.
+The second line consists of N space-separated integers - num1, num2, ..., numN , representing the numbers of the list provided by Sophie.
+The next P lines consist of four space-separated integers - op, X, Y and V, representing the type of operation; the start and end index of the range of numbers on which the operations must be performed; and the value that will be used to perform the operation, respectively.
+
+
+Output
+Print N space-separated integers representing the final list after performing all the operations.
+
+
+Constraints:
+1 ≤ N ≤ 105
+1 ≤ P ≤ 105
+1 ≤ V ≤ 105 , if op != 4
+V = 0 , if op = 4
+-105 ≤ numi ≤ 105
+1 ≤ i ≤ N
+
+
+Note
+As the output of an operation on the number of the list can be very large, modulo it by 1000000007.
+
+
+Example
+Input:
+6 5
+20 13 4 5 8 10
+1 2 3 2
+3 1 4 1
+2 5 6 5
+4 1 6 0
+3 2 4 2
+
+
+Output:
+13 2 2 2 15 17
+
+
+Explanation:
+The input list = 20 13 4 5 8 10.
+After the first operation, the list is 20 15 6 5 8 10.
+After the second operation, the list is 1 1 1 1 8 10.
+After the third operation, the list is 1 1 1 1 3 5.
+After the fourth operation, the list is 13 13 13 13 15 17.
+After the fifth operation, the final list is 13 2 2 2 15 17.
+
+https://leetcode.com/discuss/interview-question/924108/Google-or-Phone-or-K-Sorted-Iterators
+Google | Phone | K Sorted Iterators
+4
+VARSHA_1999's avatar
+K SREE VARSHA REDDY
+11
+Last Edit: November 7, 2020 2:25 AM
+
+3.4K VIEWS
+
+Position: SWE New Grad
+Location: India
+
+
+https://leetcode.com/discuss/interview-question/345744
+it is nothing but merge k sorted lists withput using any priority queue and gence u hsve to use only a single iterator
+
+google
+india
+phone screen
+Comments: 5
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+wh0ami's avatar
+Jayant Shekhar
+
+10484
+Last Edit: November 5, 2020 2:46 PM
+
+Read More
+@VARSHA_1999 Kindly add more details about examples, Job position and Job location.
+
+1
+Show 1 reply
+Reply
+Share
+Report
+sammy_91's avatar
+Saumya Mishra
+51
+December 11, 2020 1:03 PM
+
+Read More
+Hey, In how many days they give phone interview results generally?
+
+0
+Show 2 replies
+Reply
+Share
+Report
+sammy_91's avatar
+Saumya Mishra
+51
+Last Edit: November 7, 2020 11:54 AM
+
+Read More
+Hey , how much time they give to solve this? I have a 15 minutes chat with Google recruiter scheduled in few days, can I expect any coding question in that?
+
+0
+Show 6 replies
+Reply
+Share
+Report
+snan's avatar
+Satyaki Nan
+
+9
+November 5, 2020 8:52 PM
+
+Read More
+Job position and location?
+
+0
+Show 1 reply
+Reply
+Share
+Report
+pragumodi's avatar
+Pragati Modi
+
+270
+November 5, 2020 1:55 PM
+
+Read More
+Can you share an example?
+
+0
+Show 2 replies
+Reply
+Share
+Report
+https://leetcode.com/discuss/interview-question/345744
+Google | Onsite | Merge K Sorted Iterators
+56
+Sithis's avatar
+Sithis
+
+24236
+Last Edit: September 27, 2019 6:04 PM
+
+18.7K VIEWS
+
+Given a list of k sorted iterators. Implement MergingIterator to merge them. If you are not familiar with Iterators check similar questions.
+
+
+class MergingIterator implements Iterator<Integer> {
+	public MergingIterator(List<Iterator<Integer>> iterators) {
+	}
+
+	public boolean hasNext() {
+	}
+
+	public Integer next() {
+	}
+}
+Example:
+
+
+MergingIterator itr = new MergingIterator([[2, 5, 9], [], [4, 10]]);
+itr.hasNext(); // true
+itr.next(); // 2
+itr.next(); // 4
+itr.next(); // 5
+itr.next(); // 9
+itr.next(); // 10
+itr.hasNext(); // false
+itr.next(); // error
+Solution
+Related problems:
+
+
+https://leetcode.com/problems/merge-k-sorted-lists
+iterator
+google
+onsite
+amazon
+uber
+Comments: 30
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+alexm25890's avatar
+Aleksandr Melnichnikov
+65
+Last Edit: April 23, 2021 1:30 AM
+
+Read More
+Standard PQ solution for merging K sorted lists, clean.
+
+
+constructor - O(K*logK) - where K - number of lists(iterators)
+hasNext() - O(1) speed
+next() - O(logK) - where K - number of lists(iterators)
+
+
+Space O(n), map and queue for storing iterators.
+
+
+class MergingIterator implements Iterator<Integer> {
+
+    private final Map<Iterator<Integer>, Integer> curMap;
+    private final Queue<Iterator<Integer>> iteratorQueue;
+
+    public MergingIterator(List<Iterator<Integer>> iterators) {
+        this.curMap = new HashMap<>();
+        this.iteratorQueue = new PriorityQueue<>(Comparator.comparingInt(this.curMap::get));
+        for (Iterator<Integer> iter : iterators) {
+            if (iter.hasNext()) {
+                curMap.put(iter, iter.next());
+                this.iteratorQueue.add(iter);
+            }
+        }
+    }
+
+    public boolean hasNext() {
+        return !iteratorQueue.isEmpty();
+    }
+
+    public Integer next() {
+        if (iteratorQueue.isEmpty()) {
+            throw new NoSuchElementException("Iterator is empty");
+        }
+
+        Iterator<Integer> iter = iteratorQueue.poll();
+
+        Integer res = curMap.get(iter);
+
+        if (iter.hasNext()) {
+            curMap.put(iter, iter.next());
+            iteratorQueue.add(iter);
+        }
+
+        return res;
+    }
+
+}
+13
+Show 2 replies
+Reply
+Share
+Report
+CoderAndCmdr's avatar
+CoderAndCmdr
+197
+July 29, 2019 1:22 AM
+
+Read More
+Put iterators in a min heap and advance them, removing them when they equals the ends of their vecs (I'd use pairs in the heap).
+
+4
+Show 2 replies
+Reply
+Share
+Report
+koolsid4uAvgo's avatar
+koolsid4uAvgo
+
+87
+August 1, 2019 9:16 AM
+
+Read More
+need to use peeking iterator for each single list and then use PriorityQueue to maintain sorted list.
+Ideally combination of peeking iterator and mege k sorted list question
+
+
+devil in this case is in details or your implementation
+
+6
+Reply
+Share
+Report
+nits2010's avatar
+Nitin Gupta
+
+1440
+August 13, 2019 12:10 AM
+
+Read More
+I come up with multiple approaches;
+Have a look
+
+
+Using Priority Queue and Iterator,value as item in Queue
+
+/**
+ * This approach take the advantage of keeping iterator and the next value for this iterator in
+ * Priority queue it self.
+ * <p>
+ * Algorithm:
+ * 1. Initially we'll push all non-empty iterator first value and iterator (after taking first value) in priority queue as pair
+ * 2. For next, we'll poll the top Pair and gets its value, then check does this "poll" iterator has more entry to give.
+ * If yes, fetch next entry form this iterator, put a new entry in Priority Queue as this iterator (after taking  value) as key and fetched value as value
+ * 3. HasNext is simply can test does priority queue is empty or not.
+ * <p>
+ * <p>
+ * HashNext: O(1) where size is Length of iterators list
+ * next: O(1)
+ */
+class MergeKSortedIteratorsUsingPriorityQueueOnly {
+
+
+    /**
+     * Using Sorted list like data structure;
+     * Using Priority Queue
+     */
+    static class MergingIterator implements Iterator<Integer> {
+
+        private final PriorityQueue<Pair<Iterator<Integer>, Integer>> priorityQueue;
+
+
+        public MergingIterator(List<Iterator<Integer>> iterators) {
+
+            priorityQueue = new PriorityQueue<>(Comparator.comparing(Pair::getValue));
+            init(iterators);
+        }
+
+        /**
+         * O(size * log(size)) where size is Length of iterators list
+         */
+        private final void init(List<Iterator<Integer>> iterators) {
+            for (Iterator<Integer> iterator : iterators) {
+
+                if (iterator.hasNext()) {
+
+                    Integer value = iterator.next();
+                    priorityQueue.offer(new Pair<>(iterator, value));
+                }
+            }
+
+        }
+
+        /**
+         * O(1) where size is Length of iterators list
+         */
+        public boolean hasNext() {
+            return !priorityQueue.isEmpty();
+
+
+        }
+
+        /**
+         * O(log(size))
+         */
+        public Integer next() {
+
+            Pair<Iterator<Integer>, Integer> poll = priorityQueue.poll();
+
+            Integer toReturn = poll.getValue();
+            if (poll.getKey().hasNext()) {
+                Integer next = poll.getKey().next();
+                priorityQueue.offer(new Pair<>(poll.getKey(), next));
+            }
+
+            return toReturn;
+
+        }
+    }
+}
+Using PeekIterator concept [ google Guava ]
+
+
+/**
+ * HashNext: O(size) where size is Length of iterators list
+ * next: O(1)
+ */
+class MergeKSortedIteratorsUsingPriorityQueue {
+
+    private static class PeekingIterator<E> implements Iterator<E> {
+
+        private E lastElement = null;
+        private Iterator<E> iterator;
+
+        public PeekingIterator(Iterator<E> iterator) {
+            this.iterator = iterator;
+
+            if (this.iterator.hasNext())
+                lastElement = iterator.next();
+
+        }
+
+        // Returns the next element in the iteration without advancing the iterator.
+        public E peek() {
+
+
+            return lastElement;
+        }
+
+        // hasNext() and next() should behave the same as in the Iterator interface.
+        // Override them if needed.
+        @Override
+        public E next() {
+
+            E toReturn = lastElement;
+            if (iterator.hasNext())
+                lastElement = iterator.next();
+            else
+                lastElement = null;
+
+            return toReturn;
+
+        }
+
+        @Override
+        public boolean hasNext() {
+            return lastElement != null;
+        }
+    }
+
+
+    /**
+     * Using Sorted list like data structure;
+     * Using Priority Queue
+     */
+    static class MergingIterator implements Iterator<Integer> {
+
+        private final PriorityQueue<PeekingIterator<Integer>> priorityQueue;
+
+        public MergingIterator(List<Iterator<Integer>> iterators) {
+
+            priorityQueue = new PriorityQueue<>(Comparator.comparing(PeekingIterator::peek));
+            init(iterators);
+        }
+
+        /**
+         * O(size * log(size)) where size is Length of iterators list
+         */
+        private final void init(List<Iterator<Integer>> iterators) {
+            for (Iterator<Integer> iterator : iterators) {
+
+                if (iterator.hasNext())
+                    priorityQueue.offer(new PeekingIterator<>(iterator));
+            }
+
+        }
+
+        /**
+         * O(1) where size is Length of iterators list
+         */
+        public boolean hasNext() {
+            return !priorityQueue.isEmpty();
+
+
+        }
+
+        /**
+         * O(log(size))
+         */
+        public Integer next() {
+
+            PeekingIterator<Integer> poll = priorityQueue.poll();
+            Integer toReturn = poll.next();
+
+            if (poll.hasNext())
+                priorityQueue.offer(poll);
+
+            return toReturn;
+
+        }
+    }
+}
+
+K-way merge sort like iterator [ Not preferable approach] - Not a true iterator
+
+
+/**
+ * This kind of implementation is not really a iterator. As it cache the whole data.
+ * <p>
+ * HashNext: O(1) where size is Length of iterators list
+ * next: O(1)
+ */
+class MergeKSortedIteratorsUsingPriorityQueueCached {
+
+
+    /**
+     * Using Sorted list like data structure;
+     * Using Priority Queue
+     */
+    static class MergingIterator implements Iterator<Integer> {
+
+        private final PriorityQueue<Integer> priorityQueue;
+
+        public MergingIterator(List<Iterator<Integer>> iterators) {
+
+            priorityQueue = new PriorityQueue<>();
+            init(iterators);
+        }
+
+        /**
+         * O(size * log(size)) where size is Length of iterators list
+         */
+        private final void init(List<Iterator<Integer>> iterators) {
+            for (Iterator<Integer> iterator : iterators) {
+
+                while (iterator.hasNext())
+                    priorityQueue.offer(iterator.next());
+            }
+
+        }
+
+        /**
+         * O(1) where size is Length of iterators list
+         */
+        public boolean hasNext() {
+            return !priorityQueue.isEmpty();
+
+
+        }
+
+        /**
+         * O(log(size))
+         */
+        public Integer next() {
+
+            return priorityQueue.poll();
+
+        }
+    }
+}
+
+2
+Show 4 replies
+Reply
+Share
+Report
+user0498x's avatar
+iamabhi
+103
+May 7, 2020 8:21 AM
+
+Read More
+Peeking Iterator + Merging using PriorityQueue
+
+
+class MergingIterator implements Iterator<Integer> {
+    PriorityQueue<PeekingIterator> pq;
+	public MergingIterator(List<Iterator<Integer>> iterators) {
+	    pq = new PriorityQueue<PeekingIterator>((a,b) -> a.peek()-b.peek());
+        for(var itr : iterators){
+            pq.add(new PeekingIterator(itr));
+        }
+    }
+
+	public boolean hasNext() {
+        return !pq.isEmpty();
+	}
+
+	public Integer next() {
+        PeekingIterator curr = pq.poll();
+        Integer val = curr.hasNext() ? (Integer)curr.next() : null;
+        return val;
+	}
+}
+
+class PeekingIterator implements Iterator<Integer> {
+    Integer next = null;
+    Iterator<Integer> curr;
+    boolean done = false;
+	public PeekingIterator(Iterator<Integer> iterator) {
+	    curr = iterator;
+        moveIterator();
+	}
+	
+	public Integer peek() {
+        return next;
+	}
+	
+	@Override
+	public Integer next() {
+        if(done){
+            throw new NoSuchElementException();
+        }
+        Integer res = next;
+        moveIterator();
+        
+        return res;
+	}
+	
+	@Override
+	public boolean hasNext() {
+	    return next!=null;
+	}
+    
+    public void moveIterator(){
+        if(curr.hasNext()){
+            next = curr.next();
+        }
+        else{
+            done = true;
+            next = null;
+        }
+    }
+}
+
+3
+Show 1 reply
+Reply
+Share
+Report
+firsthill2020's avatar
+firsthill2020
+10
+May 20, 2021 3:20 AM
+
+Read More
+Simple solution without adding a PeekingIterator. Just keep the next values for each iterator in a Map, and add a custom comparator to the Min-Heap
+
+
+class MergingIterator implements Iterator<Integer> {
+  Map<Iterator<Integer>, Integer> peek = new HashMap<>();
+  Queue<Iterator<Integer>> heap = new PriorityQueue<>((a,b) -> Integer.compare(peek.get(a), peek.get(b)));
+  
+  public MergingIterator(List<Iterator<Integer>> iterators) {
+    
+    for(Iterator<Integer> curr: iterators) {
+      if (curr.hasNext()) {
+        peek.put(curr, curr.next());
+        heap.add(curr);
+      }
+    }
+  }
+  
+  
+  @Override
+  public boolean hasNext() {
+    return !heap.isEmpty();
+  }
+
+  @Override
+  public Integer next() {
+    if (heap.isEmpty()) {
+      return null;
+    }
+    
+    Iterator<Integer> lowest = heap.poll();
+    Integer nextVal = peek.get(lowest);
+    if (lowest.hasNext()) {
+      peek.put(lowest, lowest.next());
+      heap.add(lowest);
+    }
+    
+    return nextVal;
+  }
+}
+1
+Reply
+Share
+Report
+savyasaaachi's avatar
+pramod
+
+98
+Last Edit: November 16, 2020 12:50 PM
+
+Read More
+My implementation based on the approach discussed in comments.
+import java.util.*;
+public class Test {
+
+
+ public static void main(String []args){
+     List<List<Iterator<Integer>>> tests = Arrays.asList(Arrays.asList((Iterator<Integer>)Arrays.asList(1,3,5,7).iterator(), 
+			 (Iterator<Integer>)Arrays.asList(2,4,6,8).iterator(), 
+			 (Iterator<Integer>)Arrays.asList(7, 8, 9, 10).iterator(), 
+			 //(Iterator<Integer>)Arrays.asList().iterator(), 
+			 (Iterator<Integer>)Arrays.asList(-2, -1, 0, 1, 2).iterator(), 
+			 (Iterator<Integer>)Arrays.asList(1,3,5,7).iterator()));
+     
+     for(List<Iterator<Integer>> test : tests) {
+         MergingIterator mit = new MergingIterator(test);
+         while(mit.hasNext()) {
+             System.out.print(mit.next() + ", ");
+         } 
+         System.out.println();
+     }
+ }
+ 
+ private static class PeekingIterator implements Iterator<Integer> {
+     Integer nextElement;
+     private Iterator<Integer> it;
+     
+     public PeekingIterator(Iterator<Integer> it) {
+         this.it = it;
+         advance();
+     }
+     private void advance() {
+         if(it.hasNext()) {
+             nextElement = it.next();
+         } else {
+             nextElement = null;
+         }
+     }
+     
+     public boolean hasNext() {
+         return nextElement != null;
+     }
+     public Integer next() {
+         if(nextElement == null) {
+             throw new NoSuchElementException();
+         }
+         Integer retVal = nextElement;
+         advance();
+         return retVal;
+     }
+     public Integer peek() {
+         if(nextElement == null) {
+             throw new NoSuchElementException();
+         }
+         return nextElement;
+     }
+ }
+ 
+ public static class MergingIterator implements Iterator<Integer> {
+     private PriorityQueue<PeekingIterator> minHeap;
+     public MergingIterator(List<Iterator<Integer>> list) {
+         this.minHeap = new PriorityQueue<>((x, y) -> x.peek().compareTo(y.peek()));
+         for(Iterator<Integer> iterator : list) {
+             minHeap.offer(new PeekingIterator(iterator));
+         }
+     }
+     public Integer next() {
+         PeekingIterator topIterator = minHeap.poll();
+         Integer retVal = topIterator.next();
+         if(topIterator.hasNext()) {
+             minHeap.offer(topIterator);
+         }
+         return retVal;
+     }
+     
+     public boolean hasNext() {
+         return !minHeap.isEmpty();
+     }
+ }
+}
+
+1
+Reply
+Share
+Report
+
+https://leetcode.com/discuss/interview-question/948345/Google-or-Phone-Screen-or-Number-of-routes-to-reach-home
+Google | Phone Screen | Number of routes to reach home
+6
+Anonymous User
+Anonymous User
+Last Edit: November 27, 2020 4:58 PM
+
+1.3K VIEWS
+
+I got the following Graph question in the telephonic round of GOOGLE:
+Given a map of N cities,a thief wants to go from a start city to his hometown .An edge between two cities is bidirectional and has a positive weight that represents distance between the two cities.The thief can go from city X to city Y only if the shortest distance from city Y to his hometown is smaller than the shortest distance from city X to the hometown.
+Determine how many routes are possible from start city to his hometown.
+Assume that start city is city0 and hometown is cityN-1.
+
+
+Example :
+Input :
+N = 5
+edges = {{u,v,weight}|u,v are vertices}
+E = {{0,1,3},{0,2,3},{1,2,1},{0,3,2},{1,4,2},{2,4,1},{3,4,10}}
+Output:
+3
+0-1-4
+0-1-2-4
+0-2-4
+0-3 edge will be rejected since shortest distance between 3 and 4 is 10 > shortest distance between 0 and 4 which is 4.
+Can someone help solving this question?
+
+google
+india
+phone screening
+Comments: 6
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+tejas512's avatar
+tejas512
+28
+November 25, 2020 7:14 PM
+https://leetcode.com/discuss/interview-question/1048974/Google-Phone-Interview-or-SDE-or-Bangalore
+Google Phone Interview | SDE | Bangalore
+10
+Anonymous User
+Anonymous User
+Last Edit: February 4, 2021 3:06 PM
+
+2.0K VIEWS
+
+You are given two strings a and b that are made of lowercase english alphabets. find the number of diffrent pairs((i,j),(k,l)) such that the substring A(i...j) and B(k....l) are equal and the value if j-k+1 is minimum.
+
+
+Input:
+str1=abdc
+str2=bd
+
+
+Output:
+2
+
+google
+india
+banglaore
+phone screening
+2021 newgrad
+Comments: 3
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+Invulnerable's avatar
+Sumukh Bhardwaj
+
+2541
+Last Edit: February 5, 2021 12:59 AM
+
+Read More
+If there is substring in str1 of length n from [i,i+n] which is equal to substring of length n in str2 from [j,j+n] then the value of j-k+1 will be i+n-j+1. However if we just consider the first (perhaps any single character in the substring) then our pair will be like (i,i) & (j,j) or (i+1,i+1) & (j+1,j+1) and so on, then the value of j-k+1 will be i-j+1 which is n lesser than the previous value. Hence its always optimal to choose a substring of length 1 .
+
+
+Thus just find the minimum value by traversing for all the 26 letters and count the instances of this minimum value.
+
+10
+Show 1 reply
+Reply
+Share
+Report
+harishsanaka's avatar
+harishsanaka
+9
+February 4, 2021 10:07 PM
+
+Read More
+Could you tell when you applied and when you got the phone interview mail. Is there no coding test?
+
+1
+Show 1 reply
+Reply
+Share
+Report
+bharat_coder's avatar
+Bharat Coder
+
+129
+March 19, 2021 4:14 PM
+
+Read More
+Thanks for the question,
+Is this question on Leetcode?
+can you give the link, if yes?
+
+0
+Reply
+
+https://leetcode.com/discuss/interview-question/1118304/Google-or-Phone-Screen-or-Rate-Limiter
+
+Google | Phone Screen | Rate Limiter
+5
+Anonymous User
+Anonymous User
+March 20, 2021 2:11 PM
+
+2.7K VIEWS
+
+Location: India
+
+
+Very similar to Question 3:
+https://leetcode.com/discuss/interview-question/882062/Google-or-Onsite-or-Phone-Interviews
+
+
+Similar Leetcode Question: Logger Rate Limiter
+
+google
+india
+phone-interview
+phone screening
+Comments: 1
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+arj1010's avatar
+arj1010
+213
+March 25, 2021 3:16 AM
+
+Read More
+What was the rate limiter question ?
+
+0
+Reply
+Share
+https://leetcode.com/discuss/interview-question/882062/Google-or-Onsite-or-Phone-Interviews
+Google | Onsite | Phone Interviews
+86
+Anonymous User
+Anonymous User
+Last Edit: October 8, 2020 12:49 AM
+
+14.9K VIEWS
+
+Here are the questions I was asked during the google interviews(both phone screen as well as onsites). The position was general swe l4 and location USA.
+
+
+Q1
+
+
+
+Given a bishop on a 8*8 chessboard, find minimum number of moves required to
+reach from a given starting point and end point
+
+(Can be solved easily with BFS)
+Q2:
+
+
+Delete node in binary tree
+Q3:
+
+
+
+Q1: Given a function f, Design rate limiter such that we can't have
+no more than k=5 executions of f in 1 second.
+(Fixed window algorithms will not work, so I implemented dynamic window algo)
+
+q2: Implement retry logic for failed executions of calls(caused by overflow in last question)
+(essentially create another buffer for failed calls)
+
+
+Q4:
+
+
+
+
+
+Given a matrix with only 1s and 0s with exactly one square in the matrix,
+find
+1) the top left coordinate of square
+2) area of square
+
+Example: 
+[[0, 0, 0, 0, 0],
+[0, 0, 1, 1, 0],
+[0, 0, 1, 1, 0],
+[0, 0, 0, 0, 0]]
+
+The output will be (2,1) and 4.
+Q5:
+
+
+
+Kth element in 2 sorted arrays
+
+Given two sorted arrays find the kth smallest element in the two arrays
+
+
+Q6:
+https://leetcode.com/problems/lfu-cache/
+
+
+Q7:
+
+
+
+https://leetcode.com/discuss/interview-question/125301/Find-longest-consecutive-path-in-a-matrix
+
+Essentially this question but a starting point is given.
+So it is not the max possible length overall but max possible length from a given starting point
+
+my Amazon interview questions set is here
+
+
+https://leetcode.com/discuss/interview-question/881967/Amazon-or-Onsiteor-July-2020-Interview-Questions
+
+google
+onsite
+phone screen
+Comments: 30
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+rockhime's avatar
+Jaime
+
+100
+Last Edit: October 7, 2020 7:02 AM
+
+Read More
+Q1
+For this question, based on how tightly you are adhering to the fact that it's a bishop, you know that you can either not reach the bishop, reach it in one move, or reach it in 2 moves. This is because a move of a bishop can be any number of squares as long as its a straight diagonal move. You can check if you can reach the point if the bishop and target are the same color in a board. From there, you can differentiate the one or 2 move by checking if the point and bishop lie on the same diagonal line.
+
+30
+Show 3 replies
+Reply
+Share
+Report
+user0904QL's avatar
+dangling_pointer
+
+899
+October 7, 2020 9:44 PM
+
+Read More
+Below is the implementation If we go by approach when Bishop can move any number of steps on diagonal. Let me know if you see any mistakes with the logic.
+What DS/Algo category will this problem fall under ?
+
+
+class Cell{
+      int r;
+      int c;
+      public Cell(int r, int c){
+        this.r=r;
+        this.c=c;
+      }
+}
+
+public int getMinMoves(Cell start, Cell target){
+      if(isSameDiagonal(start,target))
+        return 1;
+      if(isSameColorSquare(start,target))
+        return 2;
+      return -1;
+}
+
+public boolean isSameDiagonal(Cell source, Cell target){
+	return Math.abs(source.r - target.r) == Math.abs(source.c - target.c);
+}
+
+public boolean isSameColorSquare(Cell source, Cell target){
+       return (source.r + source.c)%2 == (target.r + target.c)%2;
+}
+16
+Show 2 replies
+Reply
+Share
+Report
+Sanzee's avatar
+Rifayat Samee
+84
+October 7, 2020 7:38 AM
+
+Read More
+BTW for Q1, the answer can only be 2,1 or impossible (considering traditional bishop moves).
+if the start point and the end-point are not of the same color then impossible.
+if start and end are in the same diagonal then 1 move needed. Otherwise, it is always possible to go the end-point in 2 moves :P
+
+12
+Show 2 replies
+Reply
+Share
+Report
+cg4140aa's avatar
+cg4140aa
+6
+October 9, 2020 8:25 AM
+
+Read More
+Which were asked in the phone portion?
+
+6
+Reply
+Share
+Report
+Stellaradi's avatar
+stellaroftheshow27
+
+198
+Last Edit: October 10, 2020 12:19 AM
+
+Read More
+Thanks for post!! I would say LFU cache is not an easy Q to code or expect to be solved in 40 mins unless you know how to do it and that too bug free.
+
+6
+Reply
+Share
+Report
+sma8282's avatar
+sma8282
+79
+October 14, 2020 12:27 AM
+https://leetcode.com/discuss/interview-question/881967/Amazon-or-Onsiteor-July-2020-Interview-Questions
+
+https://leetcode.com/discuss/interview-question/1124989/Google-Onsite-Question
+Google Onsite Question
+13
+Anonymous User
+Anonymous User
+March 24, 2021 12:01 PM
+
+8.1K VIEWS
+
+I had a google virtual onsite round for their lateral hiring. The question I was giving was:
+Let us say that there is a home and a saloon that you want to visit. You have a routes built in across. You need to check that if there is a route that exists that lets you visit the saloon.
+For example: Here you have H which denotes your home and R is your route and S is your saloon.
+H R R .
+R . R .
+. . R .
+. . S .
+I applied DFS and was able to solve this question.
+
+
+Now there was a follow up to this question: Let us consider that at first there was no route between both of them. And slowly a route starts developing. How will you be able to check that out?
+For example:
+First:
+H . . .
+. . . .
+. . S.
+
+
+Second:
+H . . .
+. R . .
+. . S .
+
+
+Third:
+H . . R
+. R . .
+. . S .
+
+
+Fourth:
+H . . R
+R R . .
+. . S .
+and so on.
+I tried a lot on this with different ways but I was not able to reduce its complexity down and my best complexity solution turned out to be naive one. Not able to optimise this was the reason why I got rejected later :(
+Any idea how else could this have been solved?
+
+google
+india
+onsite
+Comments: 15
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+codeItFast's avatar
+NameIsNull
+
+861
+Last Edit: March 24, 2021 6:33 PM
+
+Read More
+My earlier comment got deleted accidentally. We can use the union find template for the follow up question. Perform union operation on the neighbor cells when a new route is added and keep checking if S and H are connected. Below is a sample template on how to apply union find for grid problems.
+
+https://leetcode.com/discuss/interview-question/1138514/Google-oror-Bangalore-oror-Onsite-oror-Backed-Engineer-oror-rejected
+Google || Bangalore || Onsite || Backed Engineer || rejected
+576
+Anonymous User
+Anonymous User
+Last Edit: August 18, 2023 6:58 AM
+
+15.4K VIEWS
+
+Hi all,
+Just want to share my google interview experience hope it helps someone
+
+
+Screening by recruiter:-
+
+
+Recruiters also do a minor screening process for me they asked the following questions
+
+
+What is complexity of Merge sort (Best , average and worst)
+When would you use BFS to determine the shortest path ? (Unweighted graph)
+Calculate 2^22 ( 2^10 approx 1000 so 1000 * 1000 * 4)
+Elimination round
+
+
+Given a binary tree find the length of the longest Arithmetic progression from top to bottom.
+
+
+                                     20
+                        16                       18    
+                  2          12               16      16
+            -1          14     8           1                14
+                                 7                        12
+                               6                            10                   
+                            5
+                          4
+                      3
+                    2
+                 1 
+			  -1
+For this tree from top to bottom we have multiple APs
+
+
+20->18->16->14->12->10
+20->18->16
+20->16->12->8 Edge Case Node is shared
+8->7->6->5->4->3->2->1 Edge Case Node is shared
+........
+(There are many :P APs of shorter length ! )
+
+
+Among all the APs 8->7->6->5->4->3->2->1 this sequence has the longest length so our answer is 8
+
+
+Solution :- I was able to solve it using BFS
+
+
+Follow up:- How would the code change if the question is changed to horizontal for example
+
+
+				  9
+			3           4
+		5      6      7   8	
+For this find the longest length from 5 -->3 ---> (9,6,7)---> 4--->7 which becomes an n-arry tree
+
+
+		              5
+					  3
+				9	  6     7
+				      4
+					  7
+I got call from my recruiter that I'm eligible for Onsite interview. I took 3 weeks to prepare for my onsite
+
+
+Round1 :-
+
+
+Given a set of words find the longest sequence of words where each previous word is the prefix of the next word and the next word has just one new character (Let me give an example )
+
+
+[a,ab,abc,abcd,abcdef,abcdefg,abcdefgh,abcdefghi]
+
+
+Two sequences
+
+
+a--> ab-->abc-->abcd
+abcdef--->abcdefg--->abcdefgh--->abcdefghi--->abcdefghij
+I had to return the the second sequence .
+
+
+Similar question:-
+Thanks @smpavlenko for bringing this to my notice
+https://leetcode.com/problems/longest-string-chain/
+
+
+Solution :- I solved it using Trie and DFS .
+
+
+Result:- Although I solved it but I missed one edge case which was a red flag and also my code quality and efficiency was poor. They also said I was a little slow
+
+
+Round 2:-
+
+
+Given a processor it should pick up a job from set of available jobs and execute the job which has the least running time duration . Jobs are given in the format
+
+
+[jobId, jobStartTime, durationOfThejob]
+Job ID is always unique and there could be multiple jobs starting in the same time
+
+
+i.e if I've jobs
+
+
+[1,3,2],[2,3,8],[3,4,1]
+
+
+answer should be [1,3,2] the sequence of the jobId
+
+
+Solution :-
+
+
+I solved it using PriorityQueue and a timer . (I solved this question in 15 mins :P )
+
+
+Followup:-
+What if there were 2 processors how would your code change ?
+
+
+I used a variable timer to track duration. I just added 2 more timers and made some slight modifications
+
+
+Similar question :-
+The closest question I came across in leetcode for this question was
+(1353. Maximum Number of Events That Can Be Attended)
+
+
+Please feel free to comment if there's a exact match of this question
+
+
+Result:- Overall result of this round of positive my code quality was improved, speed also improved
+
+
+Round 3:-
+
+
+Exactly this question (947. Most Stones Removed with Same Row or Column) . I didn't see this question before the interview although I was able to explain the logic to the interviewer in 5-10 mins but I got stuck in one portion while coding
+
+
+Result:- -ve couldn't complete the code on time .
+
+
+I got a call from my recruiter the next day that they've decided not to go ahead with me :'(
+
+
+I'm gonna try again after sometime
+
+
+PS:- Please forgive me for my bad english .
+
+
+I notice I got some downvotes as well . Can you please help me understand why you downvoted the post so that I can improve it ?
+
+https://leetcode.com/discuss/interview-question/1143056/Google-Interview-Question
+
+Google Interview Question
+9
+Anonymous User
+Anonymous User
+April 5, 2021 7:57 AM
+
+5.1K VIEWS
+
+This was the Google Interview Questions asked to me. Can someone please provide me solution for it.
+
+
+Find the max stars fit in the given rectangle in the Galaxy
+
+
+func maxStarFitInRect(stars:[Star], width: Float, height: Float) -> Int {
+
+
+}
+
+
+Struct Star {
+let x: Float
+let y: Float
+}
+
+google
+india
+google interview
+phone screening
+Comments: 18
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+ridinghorse21's avatar
+ridinghorse21
+24
+April 5, 2021 4:02 PM
+
+Read More
+I dont understand why such tough questions are asked. How do you guys solve these ques?
+
+11
+Reply
+Share
+Report
+akshayrelekar's avatar
+Akshay
+6
+April 6, 2021 4:33 AM
+
+Read More
+How about:
+
+
+Sort the stars array based on the x-coordinate.
+for every star, check the number of stars that fall within the range of width-x and height-y.
+find the maximum from the list obtained in step 2.
+Should this be sufficient? Please correct me if I am wrong here.
+
+4
+Show 2 replies
+Reply
+Share
+Report
+roop_02's avatar
+Roop
+
+88
+April 5, 2021 3:39 PM
+
+Read More
+I can think of solution that works in O(n^2 (logn)).
+
+
+First sort all stars based on x coordinate. Now iterate through the points, at each point we can form rectangle with base from x to x+width. You can find all points lying in this by range either by binary search of (x+width) (complexity O(logn) for each point) or you can maintain sliding window (O(n) for all points) . Now at each point you know the points within the x coordinate range, out of there point now you have to pick y such that it gives you maximum result. Now for all these points sort their y coordinate (O(nlogn)) and for each y find number of points between y and y+height using binary search. Compare this with global maximum.
+
+
+In this question I am assuming the rectangles are axis aligned.
+
+4
+Show 2 replies
+Reply
+Share
+Report
+roop_02's avatar
+Roop
+
+88
+April 5, 2021 1:43 PM
+
+Read More
+Indian interviewer or US ?
+
+6
+Show 1 reply
+Reply
+Share
+Report
+ridinghorse21's avatar
+ridinghorse21
+24
+April 5, 2021 11:40 AM
+
+Read More
+Was this for Phone interview?
+
+3
+Reply
+Share
+Report
+pikachu_sauvage's avatar
+pikachu_sauvage
+2
+Last Edit: April 5, 2021 11:45 AM
+
+Read More
+I have an idea about a trivial solution of O(n^3). Under the assumption that stars are suppose to be sparse(the distance between the farthest left and farthest right stars are much more than number of stars).
+
+
+Create a data structure: [xi, yi, ind_i] represents x, y coordinates and index of the star in list stars. O(n)
+stars can be then converted into a list of the data structure we just created star_list = [[x0, y0, 0], [x1, y1, 1], ....]
+Sort star_list by x O(nlogn)
+for loop on x axis, for each position xi, record all starts with xi - width <= x <= xi, convert this list of record into a bitmap. Here we imagine that galaxy start/end at exactly position xi, and see which star can be included into the galaxy in terms of x value. O(n^2), the first n is to iterate all xi, the second n is to look back/forward and see which set of stars can be in range if the galaxy starts at xi, we create bitmap in the same time of second loop so no additional complexity.
+Do step 3, 4 for axis y. O(n^2)
+Double for loop to compare every single combination of bitmap between bitmaps obtained for x and y axis. Record and return the maximum of bits for bitmap_xi & bitmap_yi.
+O(n * n * n), first two n are for double for loop, the third n is for bit comparison, because we can have n bits in total, so I multiply another n here.
+2
+Reply
+Share
+Report
+eeezus's avatar
+Eeezus 1914
+118
+April 11, 2021 3:48 AM
+
+Read More
+were you given any sizes for this question? Like what was the base case/ example they gave you?
+It seems like we could possibly use math based off of you Star class. If its similar to just a regular node class that is. My original approach would be solve it by using area. You already have length and width in the star property so we just need to know how big is the rectangle correct? Let me know if im misinterpreting this because I could be wrong
+
+1
+Reply
+Share
+Report
+amitsangwan898's avatar
+Amit
+
+11
+November 9, 2024 1:15 PM
+
+Read More
+i was asked this question in google interview 2024 . i failed
+
+0
+Show 1 reply
+Reply
+Share
+Report
+darshanshinde18's avatar
+DARSHAN SHINDE
+0
+Last Edit: April 19, 2024 1:44 PM
+
+Read More
+using System;
+using System.Collections.Generic;
+public class Star
+{
+public float X { get; }
+public float Y { get; }
+public Star(float x, float y)
+{
+X = x;
+Y = y;
+}
+}
+
+
+public class Program
+{
+public static int MaxStarFitInRect(List stars, float width, float height)
+{
+int count = 0;
+foreach (var star in stars)
+{
+if (star.X >= 0 && star.X <= width && star.Y >= 0 && star.Y <= height)
+{
+count++;
+}
+}
+return count;
+}
+
+
+public static void Main(string[] args)
+{
+    List<Star> stars = new List<Star>
+    {
+        new Star(10.5f, 8.2f),
+        new Star(2.3f, 4.7f),
+        new Star(7.1f, 3.0f)
+        // Add more stars as needed
+    };
+
+    float maxWidth = 12.0f;
+    float maxHeight = 10.0f;
+
+    int maxStars = MaxStarFitInRect(stars, maxWidth, maxHeight);
+    Console.WriteLine($"Maximum stars that fit in the rectangle: {maxStars}");
+}
+}
+
+
+In this C# implementation:
+
+
+We define a Star class with X and Y properties.
+The MaxStarFitInRect method takes a list of stars and the width and height of the rectangle.
+It iterates through each star and checks if its X and Y coordinates fall within the rectangle's boundaries.
+If a star's coordinates are within the rectangle, it increments the count.
+Finally, it returns the count of stars that fit inside the rectangle.
+0
+Reply
+Share
+Report
+Ruofan1's avatar
+Ruofan1
+0
+September 10, 2022 3:03 PM
+
+Read More
+the interviewer is a pig, he can not explain the problem further, hope his fa
+
+https://leetcode.com/discuss/interview-question/1161158/google-interview-Experience
+
+google interview Experience
+8
+Anonymous User
+Anonymous User
+Last Edit: April 18, 2021 1:48 PM
+
+4.2K VIEWS
+
+I got a call from google HR on linkedIn
+Phone Screen:
+phone screen, a set of 10 mcq questions regarding self balancing b trees , rb trees, priority queue , time complexities for sorting algorithms , bfs and dijkstra difference.
+R1:
+Question related to min heap.
+Print Top k chatty persons in a chat, log file.
+how to identify the top chatty person:
+by count of number of words
+chat format :
+< Jake >Hello!!There
+< Andrew >How Are!! You?
+.... so on
+
+
+No of words
+Jake - > 2
+Andrew - > 3
+
+
+You cannnot split by a space
+and word count not length of string count should be computed
+
+
+R2:
+
+
+[".##...##",
+".###..#",
+".....##",
+"....##",
+]
+size is fixed as in m* n
+m strings given in a list
+. denotes space
+'#' denotes a wall
+
+
+find the length of longest path from first row to the last row ,
+also the time complexity.
+
+google
+india
+google interview
+Comments: 10
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+nikita40's avatar
+nikita jibhkate
+1
+July 24, 2021 9:39 PM
+
+Read More
+Java solution for R1:
+
+
+import java.util.regex.*;
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
+        String[] logs = new String[2];
+        logs[0]="< Jake >Hello!!There";
+        logs[1]="< Andrew >How Are!! You?";
+        findTopKchattyPeople(logs, 2);
+    }
+    
+    public static String[] findTopKchattyPeople(String[] logs, int k){
+        Map<String, Integer> map=new HashMap<>();
+        for(int i=0;i<logs.length;i++){
+            String log = logs[i];
+            String key = log.substring(log.indexOf("<")+1, log.indexOf(">")).trim();
+            
+            Pattern pattern = Pattern.compile("[a-zA-Z_]+");
+            Matcher matcher = pattern.matcher(log);
+
+            int count = 0;
+            while (matcher.find())
+                count++;
+            int value=count-1;
+            System.out.println(key+": "+value);
+            map.put(key, map.getOrDefault(key,0)+value);
+        }
+        PriorityQueue<String> maxHeap=new PriorityQueue<>((a,b)->map.get(b)-map.get(a));
+        for(String p : map.keySet()){
+            maxHeap.add(p);
+        }
+        String[] topKchattyPeople = new String[Math.min(map.keySet().size(), k)];
+        for(int i=0;i<topKchattyPeople.length;i++){
+            topKchattyPeople[i]=maxHeap.poll();
+            System.out.println(topKchattyPeople[i]);
+        }
+        return topKchattyPeople;
+    }
+}
+1
+Show 3 replies
+Reply
+Share
+Report
+absolute_rush's avatar
+Vijay Sharma
+
+24
+July 3, 2021 11:15 PM
+
+Read More
+You can check R2 problem and its solution here https://leetcode.com/discuss/interview-question/1150720/google-onsite-max-path-from-entry-row-to-exit-row
+
+1
+Reply
+Share
+Report
+lomsadze's avatar
+BLom
+19
+Last Edit: May 26, 2021 4:20 PM
+
+Read More
+For R2:
+EDIT: Solution is for task when only available directions are bottom,left,right.
+Do DFS from each empty cell from top row.
+Mark current cell as visited and if you explore all neighbours of current cell than mark it back as unvisited.
+You will also need DP[row][length][DirectionFromWhereYouCame]. As you dfs will also have param DirectionFromWhereYouCame as its important to memorize.
+DirectionFromWhereYouCame=can be only 0,1,2 as we only move right,left,bottom.
+Time Complexity : rowscolumnsDirectionFromWhereYouCame=rowscolumns3=rowscolumns= O(rowscolumns)
+Space: rows*columns
+
+
+
+public int findLongestPath(char[][] matrix) {
+  if (matrix == null || matrix[0].length==0) return -1;
+  
+  int finalRes = -1;
+  int[][][] dp = new int[matrix.length+1][matrix[0].length+1][3];
+  for (int i=0; i<dp.length; i++) {
+    for (int j=0; j<dp[0].length; j++) Arrays.fill(dp[i][j], -2);
+  }
+  boolean[][] visited = new boolean[matrix.length][matrix[0].length];
+  for (int i=0; i<matrix[0].length; i++) {
+      int res = dfs(0,j, matrix, dp, 2);
+      finalRes = Math.max(finalRes, res, visited);    
+      if (matrix[0][j] == '.' || matrix.length == 1) {
+        finalRes = Math.max(1, finalRes);
+      }
+  }
+  
+  return finalRes;
+}
+
+public boolean isValid(int r, int c, char[][] matrix) {
+  return r>=0 && c>=0 && r<matrix.length && c<matrix[0].length && matrix[r][c] !='#' && !visited[r][c];
+}
+
+int[][] dirs = new int[][]{{0,1}, {0,-1}, {1,0}};
+
+
+public int dfs(int r, int c, char[][] matrix, int[][][] dp, boolean[][] visited, int fromWhereCame) {//r=0 c=0
+  if (r == matrix.length) return 0;
+  if (!isValid(r,c,matrix, visited)) return -1;  
+  if (dp]r][c][fromWhereCame] != -2) return dp]r][c][fromWhereCame];
+  visited[r][c] = true;
+  int finalRes = -1;
+  for (int i=0; i<dirs.length; i++) {
+    int newR = r+dir[0];
+    int newC = c+dir[1];
+    int res = dfs(newR,newC, matrix, dp, visited, i); //dfs will give you longest path from newR,newC until you exit MAZE
+    finalRes = Math.max(res, finalRes);
+  }
+
+  if (finalRes != -1) {
+    finalRes++; //if you find at least one path means that finalRes !=-1 and you need to add 1 step which you did to leave your current cell.
+  }
+  
+  dp[r][c][fromWhereCame] = finalRes;
+  visited[r][c] = false;
+  return finalRes;
+}
+1
+Show 5 replies
+Reply
+Share
+Report
+sg345's avatar
+sg345
+26
+April 25, 2021 8:08 PM
+
+Read More
+R1 Question:
+< Jake >Hello!!There
+< Andrew >How Are!! You?
+.... so on
+Can Jake chat again? In that case do we store Jake's word count in some auxillary hashmap?
+
+1
+Show 1 reply
+Reply
+Share
+Report
+delivery_boy's avatar
+Himanshu Sahu
+
+11
+Last Edit: May 9, 2024 4:13 PM
+
+Read More
+Java Solution:
+We need a 3D matrix to store the info from which direction we come to this co-ordinate
+Note - the solution count the number of nodes in the path
+
+
+
+public class Main {
+
+    static int[][][] dp;
+    static int[][] dir = new int[][]{{0, -1}, {0, 1}, {1, 0}};
+
+    public static void main(String[] args) {
+        char[][] matrix = new char[][]{
+                {'.', '#', '#', '.', '.', '#', '#'},
+                {'.', '#', '#', '.', '.', '#', '#'},
+                {'.', '#', '#', '#', '.', '.', '#'},
+                {'.', '.', '.', '.', '.', '#', '#'}};
+        int m = matrix.length, n = matrix[0].length;
+        dp = new int[m][n][3];
+        for (int[][] row : dp)
+            for(int[] col : row)
+                Arrays.fill(col, -1);
+        int result = 0;
+        boolean[][] visited = new boolean[m][n];
+        for (int i = 0; i < n; i++) {
+            int leftOrRight = Math.max(solve(0, i, 0,matrix,visited), solve(0, i, 1, matrix, visited));
+            int leftOrRightorDown = Math.max(leftOrRight, solve(0, i, 2,matrix,visited));
+            result = Math.max(result, leftOrRightorDown);        }
+        System.out.println(result);
+    }
+
+    private static int solve(int i, int j, int direction, char[][] matrix, boolean[][] visited) {
+        if (i < 0 || j < 0 || i >= matrix.length || j >= matrix[0].length || visited[i][j])
+            return 0;
+
+        if (dp[i][j][direction] != -1)
+            return dp[i][j][direction];
+
+        if (matrix[i][j] == '#' || i == matrix.length - 1)
+            return 0;
+
+        int maxPath = 0;
+        visited[i][j] = true;
+        for (int k = 0; k < 3; k++) {
+            maxPath = Math.max(maxPath, solve(i + dir[k][0], j + dir[k][1], k, matrix, visited));
+        }
+        visited[i][j] = false;
+        return dp[i][j][direction] = maxPath + 1;
+    }
+}
+
+0
+Reply
+Share
+Report
+lei_zhang_00's avatar
+Lei Zhang
+
+5
+Last Edit: November 26, 2022 12:48 AM
+
+Read More
+For R1,
+
+
+public static List findTopKchattyPeople(List logs, int k) {
+List topChatty = new ArrayList<>();
+Map<String, Integer> map = new HashMap<>();
+int n = logs.size();
+
+
+	// Put (Person, # of chat words) at map
+	for (int i = 0; i < n; i++) {
+		String log = logs.get(i);
+		Matcher matcher = pattern.matcher(log);
+		int m = 0;
+		String person = "";
+		while (matcher.find()) {
+			m++;
+
+			if (m == 1)
+				person = matcher.group();
+		}
+		map.put(person, map.getOrDefault(person, 0) + m);
+	}
+
+	Set<Entry<String, Integer>> set = map.entrySet();
+	PriorityQueue<Entry<String, Integer>> pq = new PriorityQueue<>((a, b) -> (b.getValue() - a.getValue()));
+	pq.addAll(set);
+
+	for (int i = 0; i < k; i++)
+		topChatty.add(pq.poll().getKey());
+
+	return topChatty;
+}
+0
+Reply
+Share
+Report
+xtreding's avatar
+Sergey
+
+27
+July 27, 2022 12:49 AM
+
+Read More
+
+/*
+Questions:
+1. can we consider non-alphabet characters as words delimiters? - yes
+2. in case of equal words how we should prioritize? - by lexi order of name
+3. can chat format have invalid rows? no
+4. can '>' present in message? - no
+*/
+
+/*
+ 1. build a map people[name]=&Counter{name: name, count: number of words}
+ 2. heapify (max heap)
+ 3. return top K
+*/
+
+func main() {
+	fmt.Println(strings.Join(topKChattyPersons([]string{
+		"< Jake >Hello!!There",
+		"< Andrew >How Are!! You?",
+		"< Amanda >GOOD!!!!",
+		"< Amanda >and you?",
+		"< Amanda > miss you guys!",
+		"< Jake >metoo",
+	}, 3), "\n"))
+}
+
+type Counter struct {
+	name  string
+	words int
+}
+
+type CounterArr []*Counter
+
+func (ca CounterArr) Less(i, j int) bool {
+	return ca[i].words > ca[j].words ||
+		(ca[i].words == ca[j].words && ca[i].name < ca[j].name)
+}
+
+func (ca CounterArr) Swap(i, j int) {
+	ca[i], ca[j] = ca[j], ca[i]
+}
+
+func (ca CounterArr) Len() int {
+	return len(ca)
+}
+
+func (ca *CounterArr) Pop() interface{} {
+	old := *ca
+	n := len(old)
+	v := old[n-1]
+	old = old[:n-1]
+	*ca = old
+
+	return v
+}
+
+func (ca *CounterArr) Push(v interface{}) {
+	*ca = append(*ca, v.(*Counter))
+}
+
+func topKChattyPersons(chat []string, k int) []string {
+	peopleByName := make(map[string]int, 16)
+	people := make(CounterArr, 0, 16)
+	for _, row := range chat {
+		name, words := readRow(row)
+		index, ok := peopleByName[name]
+		if !ok {
+			people = append(people, &Counter{name: name, words: 0})
+			index = len(people) - 1
+			peopleByName[name] = index
+		}
+		people[index].words += words
+	}
+
+	heap.Init(&people)
+
+	topChatty := make([]string, k)
+	for i := 0; i < k && len(people) > 0; i++ {
+		topPerson := heap.Pop(&people).(*Counter)
+		topChatty[i] = fmt.Sprintf("%s -> %d", topPerson.name, topPerson.words)
+	}
+
+	return topChatty
+}
+
+/*
+chat format :
+< Jake >Hello!!There
+< Andrew >How Are!! You?
+.... so on
+
+*/
+func readRow(row string) (name string, words int) {
+	parts := strings.Split(row, ">")
+	var builder strings.Builder
+	for i := 0; i < len(parts[0]); i++ {
+		if (parts[0][i] >= 'a' && parts[0][i] <= 'z') ||
+			(parts[0][i] >= 'A' && parts[0][i] <= 'Z') {
+			builder.WriteByte(parts[0][i])
+		}
+	}
+
+	name = builder.String()
+
+	current := 0
+	for i := 0; i < len(parts[1]); i++ {
+		if (parts[1][i] >= 'a' && parts[1][i] <= 'z') ||
+			(parts[1][i] >= 'A' && parts[1][i] <= 'Z') {
+			if current == 0 {
+				words++
+			}
+
+			current++
+		} else {
+			current = 0
+		}
+	}
+
+	return
+}
+
+0
+Reply
+Share
+Report
+sg345's avatar
+sg345
+26
+May 16, 2021 12:46 PM
+
+Read More
+You cannnot split by a space
+and word count not length of string count should be computed
+Seems trivial but how do we most efficiently get the word count? using regex?
+len(re.findall("[a-zA-Z_]+", string)) ?
+
+0
+Reply
+Share
+Report
+devoshree's avatar
+Devoshree Mukherji
+
+47
+April 29, 2021 6:12 PM
+
+Read More
+Both of these questions were asked in the same round?
+
+0
+Reply
+Share
+Report
+noobsolver's avatar
+Gaurav Kumar Mathur
+
+36
+April 16, 2021 3:52 PM
+
+Read More
+Which location and what year of experience you have?
+
+https://leetcode.com/discuss/interview-question/1150720/google-onsite-max-path-from-entry-row-to-exit-row
+Google onsite: Max path from entry row to exit row
+23
+Anonymous User
+Anonymous User
+Last Edit: April 10, 2021 7:50 AM
+
+4.5K VIEWS
+
+Given a matrix, we can consider any point on the first row as entry point and any point on last row as exit point. # is a wall and . is empty space. Find the path with max length. You can only go down, right or left and visit each cell only once.
+
+
+I gave a DFS brute force approach but the interviewer wanted a DP solution.
+
+
+eg matrix:
+
+
+"#.#..#",
+"#.#..#",
+"#.##.#",
+"#..#.#",
+"#..#.#",
+"#..#.#"
+Comments: 15
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+lovetocode2021's avatar
+justdoit
+
+65
+April 11, 2021 12:42 AM
+
+Read More
+// "static void main" must be defined in a public class.
+public class Main {
+public static void main(String[] args) {
+System.out.println("Hello World!");
+char[][] data = new char[][]{
+{'#' , '#' , '#'},
+{'.' , '#' , '.'}
+};
+System.out.println(findMax(data));
+}
+
+
+public  static int findMax(char[][] data){
+
+    int rows = data.length , cols = data[0].length;
+    int[][]dp = new int[1][cols];
+    Arrays.fill(dp[0] , Integer.MIN_VALUE);
+    
+    for(int j = 0 ; j < cols ; j++){
+        if(data[0][j] != '#') dp[0][j] = 1;
+    }
+    
+    
+    for(int i = 1 ; i < data.length ; i++){
+        int[][] tmp = new int[1][cols];
+        Arrays.fill(tmp[0] , Integer.MIN_VALUE);
+        for(int j = 0 ;  j < data[0].length; j++){
+           
+            if(data[i][j] == '#') continue;
+            
+            if(dp[0][j] != Integer.MIN_VALUE) tmp[0][j] = dp[0][j] + 1;
+            
+            
+            if(j > 0  && tmp[0][j-1] != Integer.MIN_VALUE) 
+                tmp[0][j] = Math.max(tmp[0][j] , tmp[0][j-1] + 1);
+            
+        }
+        
+        int[][] right = new int[1][cols];
+        Arrays.fill(right[0] , Integer.MIN_VALUE);
+        for(int j = cols -1 ; j >= 0 ; j--){
+           
+        
+           
+            if(data[i][j] == '#') continue;
+            
+            if(dp[0][j] != Integer.MIN_VALUE) right[0][j] = dp[0][j] + 1;
+            
+            
+            if(j < cols -1  && right[0][j+1] != Integer.MIN_VALUE) 
+                right[0][j] = Math.max(right[0][j] , right[0][j+1] + 1);
+            
+        }
+        
+        for(int j = 0 ; j < cols ; j++){
+            dp[0][j] = Math.max(right[0][j] , tmp[0][j]);
+        }
+
+        }
+    int max = Integer.MIN_VALUE;
+    for(int j = 0 ; j < cols ; j++) max = Math.max(max , dp[0][j]);
+        return max == Integer.MIN_VALUE ? 0 : max;
+    }
+}
+
+9
+Reply
+Share
+Report
+vismit2000's avatar
+Vishal Mittal
+
+151
+Last Edit: April 17, 2021 1:11 PM
+
+Read More
+dp[i][j][dir] - 3d DP with dir (direction) as LEFT, RIGHT, DOWN
+
+
+dp[i][j][k] denotes max path length from cell (i, j) to bottom of the matrix if I go in direction k from cell (i,j)
+
+
+Let's fill from bottom row.
+
+
+Base case:
+dp[n-1][j][k] = 1 for all j and k wherever empty space is present, -INF otherwise
+
+
+State transitions:
+
+
+dp[i][j][DOWN] = 1 + max(dp[i+1][j][DOWN], dp[i+1][j][LEFT], dp[i+1][j][RIGHT])
+dp[i][j][LEFT] = 1 + max(dp[i][j-1][DOWN], dp[i][j-1][LEFT])
+dp[i][j][RIGHT] = 1 + max(dp[i][j+1][DOWN], dp[i][j+1][RIGHT])
+Max of top row values is the answer.
+
+
+I didn't account for # in state transitions but handling that is trivial. (dp[i][j][k] will be -INF for all k if cell (i, j) contains wall #)
+
+
+The tricky part is order of state transitions.
+
+
+For all elements in ith row: 
+- First calculate dp[i][j][DOWN]
+- Then dp[i][j][LEFT] from j = 0 to n
+- And then dp[i][j][RIGHT] from n-1 to 0.
+If we do so there won't be any cyclical dependency. Otherwise, if we try to compute dp[i][j][DOWN], dp[i][j][LEFT], dp[i][j][RIGHT], for cell (i, j) at once, then there will be unresolved dependencies like dp[i][j][RIGHT] depending on dp[i][j+1][DOWN] and dp[i][j+1][RIGHT] which may not have been populated at that time.
+
+
+C++ code using top-down approach
+
+
+#include <bits/stdc++.h>
+using namespace std;
+
+vector<vector<int>> grid;
+int M, N;
+vector<vector<vector<int>>> dp;
+
+int solve(int r, int c, int k){
+    if(dp[r][c][k] != -1)
+        return dp[r][c][k];
+    if(grid[r-1][c-1] == 0)
+        return 0;
+    dp[r][c][k] = 0;
+    if(k == 0){
+        dp[r][c][k] = max(solve(r, c+1, 0), solve(r, c+1, 2)) + 1;
+    }
+    else if(k == 1){
+        dp[r][c][k] = max(solve(r, c-1, 1), solve(r, c-1, 2)) + 1;
+    }
+    else{
+        dp[r][c][k] = max(solve(r-1, c, 2), max(solve(r-1, c, 0), solve(r-1, c, 1))) + 1;
+    }
+    return dp[r][c][k];
+}
+
+int main() {
+    grid = vector<vector<int>>{{0,1,0,1,1,0},
+                               {0,1,0,1,1,0},
+                               {0,1,0,0,1,0},
+                               {0,1,1,0,1,0},
+                               {0,1,1,0,1,0},
+                               {0,1,1,0,1,0}};
+    
+    M = grid.size(), N = grid[0].size();
+    
+    dp = vector<vector<vector<int>>>(M+2, vector<vector<int>>(N+2, vector<int>(3, -1)));
+    for(int i = 0 ; i < N+2; i++)
+        dp[0][i][0] = dp[0][i][1] = dp[0][i][2] = 0;
+    for(int j = 0 ; j < M+2; j++){
+        dp[j][0][0] = dp[j][0][1] = dp[j][0][2] = 0;
+        dp[j][N+1][0] = dp[j][N+1][1] = dp[j][N+1][2] = 0;
+    }
+    int ans = 0;
+    for(int j = 1 ; j <= M ; j++){
+        for(int i = 1; i <= N ; i++){
+            ans = max(ans, solve(j, i, 0));
+            ans = max(ans, solve(j, i, 1));
+            ans = max(ans, solve(j, i, 2));
+        }
+    }
+    cout << ans << endl;
+    return 0;
+}
+15
+Show 11 replies
+Reply
+Share
+Report
+tuhinnn_py's avatar
+Tuhin Mukherjee
+
+256
+January 6, 2022 2:37 PM
+
+Read More
+You can do it through BFS, very easily
+
+4
+Reply
+Share
+Report
+Ravi_Lakshman's avatar
+Ravi_Lakshman
+147
+May 26, 2021 12:55 AM
+
+Read More
+Easy to read Java thanks to @darkbird12 for sharing below
+
+
+import java.util.Arrays;
+ 
+public class LongestPath {
+    public static void main(String[] args) {
+        
+        if (path(new String[] { "#.#..#",
+                                "#.#..#",
+                                "#.##.#",
+                                "#..#.#",
+                                "#..#.#",
+                                "#..#.#"}) != 9) {
+            System.out.println("Answer 1 is wrong");                
+        }
+    
+        if (path(new String[] { "#.#...#",
+                                "#.#...#",
+                                "#.....#",
+                                "#..#..#",
+                                "#..#..#",
+                                "#..#..#"}) != 17) {
+            System.out.println("Answer 2 is wrong");                
+        }   
+    
+        if (path(new String[] { "..",
+                                ".."}) != 4) {
+            System.out.println("Answer 3 is wrong");                
+        }   
+    }
+    
+    private static int path(String[] maze) {
+        int n = maze.length;
+        int m = maze[0].length();
+        
+        int[] prevLine = new int[m];
+        int[] leftLine = new int[m];
+        int[] rightLine = new int[m];
+        
+        int longest = 0;
+        
+        for (int i = 0; i < n; i++) {
+            char[] mazeLine = maze[i].toCharArray();    
+            
+            // go right
+            for (int j = 0; j < m; j++) {
+                if (mazeLine[j] != '#') {
+                    int left = j == 0 ? 0 : leftLine[j - 1];
+                    int top = i == 0 ? 0 : prevLine[j];
+                    leftLine[j] = Math.max(left, top) + 1;
+                }
+            }
+            
+            // go left
+            for (int j = m - 1; j >= 0; j--) {
+                if (mazeLine[j] != '#') {
+                    int right = j == m - 1 ? 0 : rightLine[j + 1];
+                    int top = i == 0 ? 0 : prevLine[j];
+                    rightLine[j] = Math.max(right, top) + 1;
+                    leftLine[j] = Math.max(leftLine[j], rightLine[j]);
+                    
+                    // last line
+                    if (i == n - 1) {
+                        longest = Math.max(longest, leftLine[j]);
+                    }
+                }
+            }
+ 
+            prevLine = leftLine;
+            rightLine = new int[m];
+            leftLine = new int[m];
+        }
+ 
+        
+        return longest;
+    }
+}
+2
+Show 3 replies
+Reply
+Share
+Report
+treinw's avatar
+Guilherme Trein
+38
+Last Edit: August 14, 2021 10:30 PM
+
+Read More
+Would Dijkstra (with max heap) starting at empty nodes in row=0 work in this case?
+
+1
+Show 2 replies
+Reply
+Share
+Report
+user9915u's avatar
+a_prakash
+3
+May 28, 2021 1:44 PM
+
+Read More
+Time complexity - O(row*col), Space complexity - O(col)
+https://leetcode.com/playground/HCZHaqVQ
+
+1
+Reply
+Share
+Report
+Aish_Arav's avatar
+Aishwarya
+
+4
+April 28, 2021 9:03 AM
+
+Read More
+Can you share your other onsite questions?
+
+1
+Reply
+Share
+Report
+rowe1227's avatar
+rowe1227
+
+4821
+April 10, 2021 6:48 AM
+
+Read More
+Thanks for sharing.
+Can you provide any additional info i.e. company name, interview stage (OA, Phone, On Site), or bounds on the matrix size?
+
+0
+Show 4 replies
+Reply
+Share
+Report
+deepsaxena00's avatar
+Deep
+
+13
+April 15, 2023 3:53 AM
+
+Read More
+How about using the reverse of Dijsatras Algo
+
+0
+Reply
+Share
+Report
+blitzz_boy's avatar
+blitzz_boy
+8
+Last Edit: February 5, 2022 4:58 PM
+
+https://leetcode.com/discuss/interview-question/1161673/Google-L2%3A-Anti-Virus-Design
+Google L2: Anti-Virus Design
+1
+Anonymous User
+Anonymous User
+April 16, 2021 10:43 PM
+
+499 VIEWS
+
+You have a write a simple "Anti-Virus" application which scans all the files on the systems and revomes known "Malwares" if present any. You are provided a database of malwares MD5 hash.
+The basic functionality involves walking the filesystem, hashing each file, checking with DB if is a known malware or not. The process is interruptible by Apllication shutdown, machine reboot etc.., but on startup it should continue scanning from the last file path accessed instead of rescanning all previously examined files.
+
+system design
+design pattern
+google
+india
+Comments: 1
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+codersaif's avatar
+Saif
+1014
+April 17, 2021 4:27 AM
+
+Read More
+As file system is a tree like structure, AntiVirus can scan from a drive (considering its a windows system), take all directories as its children node. and scan them one by one, alphabetically.
+So a BFS scan should work.
+Now when a file is scanned it would generate MD5 hash of that file's content and match with its existing database, It can be log(N) complexity if binary searched or if the database is a hashtable then, O(1) search can be done.
+When the scan of a file is completed it will update the current completed node to this file, and move for next one. So that if rebooted, instead of searching fromt he beginning it can start after that file.
+
+
+Edge case scenario:
+
+
+improper shutdown: while updating current scanned file, if improper shutdown happens, the file can be corrupted. To avoid that, we can use 2 files (recent_scanned, before_recent_scanned). and update before_recent_scanned first by copying the recent_scanned, and then write in recent_scanned file. this way, it is possible to prevent corruption of the files.
+
+
+some files are copied: while scanning, user can copy some files from one directory to another directory. Here's two scenarios can be happened. Either he is copying something from already scanned to another location or he can copy non-scanned files to scanned location. We can ignore the first case (for better optimization we can also consider this case). For second case, We can make a list of those files and save it for scan later. Or we can also scan before writing that file. For all of these we have to use system api.
+
+
+New file written by some programs: If any new file is written by some other programs, with system API we can also know which files are written, and scan them.
+
+
+Optimization: To optimize, we can use multithreading, All worker threads will take a file from current pointer, save the file name to disk/ (in a file named, currently_scanning.txt), and start scanning, when finished, remove that file name from the disk and continue taking another non-scanned file from the pointer. While taking a new file, it must lock the current pointer file to avoid duplicate scanning by another thread. To create better user experience, it can check current processor idle status, free ram etc. and update total thread count if necessary.
+
+
+virus database updated: virus database can be updated frequently as new viruses released very often. If a complete scan happens earlier, anti-virus program can save the md5 hash in a file and cross check with the updated virus hashes.
+
+
+These are the ideas that came into my mind. Let me know if there's a better way to resolve this.
+
+https://leetcode.com/discuss/interview-question/1195944/JP-Morgan-Online-Coding-Assessment-Question-for-Intern
+
+JP Morgan Online Coding Assessment Question for Intern
+4
+Anonymous User
+Anonymous User
+May 7, 2021 4:26 PM
+
+2.2K VIEWS
+
+Given a finite set of three letter words How will you find out minimum number of hops required to reach from one word to the other.
+Conditions :
+Hops should be minimum.
+Resulting word should be in the set.
+
+
+Ex
+Input [‘sat’,’cat’,’rat’,’tap,’stt’]
+‘sat’
+‘stt’
+Output 1
+
+python
+google
+india
+jpmorgan
+internship
+fang
+coding
+jp morgan
+microsoft
+Comments: 2
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+GibJobPlis's avatar
+GibJobPlis
+163
+May 8, 2021 10:57 AM
+
+Read More
+BFS. Similar to word ladder I guess
+
+0
+Show 2 replies
+Reply
+Share
+Report
+catnoodle's avatar
+catnoodle
+
+164
+Last Edit: May 8, 2021 10:57 AM
+
+Read More
+Seems like shortest path in unweighted graph. BFS. You haven't said how we can hop though. Assuming it's by changing one letter.
+
+0
+Reply
+Share
+Report
+
+https://leetcode.com/discuss/interview-question/805583/Google-or-OA-2021-or-PR-Strings
+
+Google | OA 2021 | PR Strings
+7
+susmitha_13's avatar
+Susmitha
+10
+Last Edit: August 22, 2020 8:04 PM
+
+1.3K VIEWS
+
+Location : India
+Position : Software Engineer III
+
+
+There are total two questions to attempt within 60 minutes of time.
+
+
+PR Strings
+
+
+Problem Statement :
+You are given String S of lowercase alphabets. In one operation, you can remove the substring "pr" from the string S and get amount X or you can remove the substring "rp" from the string S and get the amount Y.
+
+
+Find the maximum amount you can get if you perform zero or more such operations optimally.
+
+
+Input Format
+First Line contains number of testcase T.
+First line of each testcase contains a string S
+Second line contains two spaced integers X and Y
+
+
+Sample Input
+
+
+3
+abppprrr
+5 4
+prprprrp
+7 10
+abcdpqrpqr
+3 4
+Sample Output
+
+
+15
+37
+4
+Explaination
+Testcase 1 -
+Remove "pr", S becomes "abpprr".
+Remove "pr", S becomes "abpr".
+Remove "pr", S becomes "ab".
+Hence - 3x5 = 15
+
+
+Testcase 2 -
+Remove "rp", S becomes "prprrp"
+Remove "rp", S becomes "prrp"
+Remove "rp", S becomes "pr"
+Remove "rp", S becomes " "
+
+
+Constraints
+1 <= T <= 10
+1 <= |S| <= 100000
+1 <= X <= 100
+1 <= Y <= 100
+
+google
+india
+onsite
+Comments: 4
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+subhambanerjee138's avatar
+Subham Banerjee
+35
+August 23, 2020 8:01 AM
+
+Read More
+https://leetcode.com/discuss/interview-question/806663/pr-string-from-google-online-coding-challenge-for-interns-2021-india
+
+1
+Reply
+Share
+Report
+amsv_24's avatar
+Pratiksha Pandey
+448
+October 12, 2021 11:05 AM
+
+Read More
+https://leetcode.com/problems/maximum-score-from-removing-substrings/
+
+0
+Reply
+Share
+Report
+rohilla_himanshu's avatar
+Himanshu Rohilla
+179
+August 29, 2020 4:27 PM
+
+Read More
+A simple solution, to count 'p' or 'r' first depending on X & Y values.
+Initialization contains some char init which will take care of condition with same code.
+
+
+int calculatePoints(string S, int x, int y) {
+int res = 0, cnt1 = 0, cnt2 = 0, inc1, inc2;
+char ch1, ch2;
+
+if(x > y) {
+    ch1 = 'p'; ch2 = 'r'; inc1 = x; inc2 = y;
+} else {
+    ch1 = 'r'; ch2 = 'p'; inc1 = y; inc2 = x;
+}
+
+for(char ch : S) {
+    if(ch == ch1) {
+        cnt1++;
+    } else if(ch == ch2) {
+        if(cnt1 > 0) {
+            cnt1--;
+            res += inc1;
+        }
+        else
+            cnt2++;
+    }
+}
+// now, if cnt1 and cnt2 != 0
+if(cnt1 != 0 && cnt2 != 0) {
+    res += min(cnt1, cnt2)*inc2;
+}
+return res;
+}
+
+0
+Reply
+Share
+Report
+swetasolanki's avatar
+swetasolanki
+5
+August 23, 2020 11:03 PM
+
+Read More
+Here is solution using recursion:
+'''
+
+
+	int maxValue(String s, int x, int y) {
+		int [] res = new int [] {0};
+		helper(s, x, y, 0, res);
+		return res[0];
+			
+	}
+	void helper(String s, int x, int y, int sum, int [] res){
+		if(s.indexOf("pr") == -1 && s.indexOf("rp") == -1) {
+			res[0] = Math.max(res[0], sum);
+			return;
+		}
+		
+		if(s.indexOf("pr") != -1) {
+			if(s.indexOf("pr") == 0)
+				helper(s.substring(2), x, y, sum+x, res);
+			else {
+				int index = s.indexOf("pr");
+				helper(s.substring(0, index) + s.substring(index+2), x, y, sum+x, res);
+			}
+		}
+		if(s.indexOf("rp") != -1) {
+			if(s.indexOf("rp") == 0)
+				helper(s.substring(2), x, y, sum+y, res);
+			else {
+				int index = s.indexOf("rp");
+				helper(s.substring(0, index) + s.substring(index+2), x, y, sum+y, res);
+			}
+		}
+	}
+'''
+
+0
+Show 1 reply
+Reply
+Share
+Report
+https://leetcode.com/discuss/interview-question/806663/pr-string-from-google-online-coding-challenge-for-interns-2021-india
+
+PR String from Google Online Coding Challenge for Interns 2021 (India)
+27
+subhambanerjee138's avatar
+Subham Banerjee
+35
+Last Edit: August 23, 2020 8:02 AM
+
+7.0K VIEWS
+
+You are given a string S (consisting of lowercase English characters).
+
+
+In one operation, you can remove the substring "pr" from the string S and get the amount X or you can remove the substring "rp" from the string S and get the amount Y.
+
+
+Find the maximum amount you can get if you perform zero or more such operations optimally.
+
+
+Note:
+Substring of string S is defined as a continuous sequence of characters in S.
+After removal of substring "pr" or "rp" from S, the rest of the characters in S remains in the same order.
+
+
+Input Format:
+
+
+First Line contains an integer T denoting the number of test cases.
+First Line of each test case contains a string S.
+Second Line of each test case contains two space-separated integers X and Y.
+Output Format:
+
+
+For each test case print a single integer denoting maximum amount you can get in a new line.
+
+
+Constraints:
+
+
+1 <= T <= 10
+1 <= |S| <= 100000
+1 <= X <= 100
+1 <= Y <= 100
+
+
+Sample Input:
+3
+abppprrr
+5 4
+prprprrp
+7 10
+abcdpqrpqr
+3 4
+
+
+Sample Output:
+15
+37
+4
+
+
+Explanation:
+
+
+S = "abppprrr", X = 5, y = 4
+
+
+Remove substrings as mentioned:
+
+
+Remove "pr", new string S = "abpprr"
+Remove "pr", new string S = "abpr"
+Remove "pr", new string S = "ab"
+
+
+In total, we remove "pr" 3 times. Hence answer is = 5+5+5 = 15
+
+
+The idea behind the solution:
+
+
+First, we check either X is greater than Y or not if X > Y then removing "pr" will give us greater value and if Y > X then "rp" gives more.
+We should greedily remove "pr" or "rp" depending upon either X is greater or Y is greater.
+We will be using a stack to keep the order same after removal of substrings.
+After removing all possible "pr" we will check in rest of the string if any "rp" present and we will remove them and vice versa.
+Python Solution
+def rp(string, x, y, ans, flag):
+    stack = []
+    for char in string:
+        if char == 'p':
+            if stack and stack[-1] == 'r':
+                ans[0] += y
+                stack.pop()
+            else:
+                stack.append(char)
+        else:
+            stack.append(char)
+    if flag:
+        pr("".join(stack), x, y, ans, False)
+
+
+def pr(string, x, y, ans, flag):
+    stack = []
+    for char in string:
+        if char == 'r':
+            if stack and stack[-1] == 'p':
+                ans[0] += x  
+                stack.pop()
+            else:
+                stack.append(char)
+        else:
+            stack.append(char)
+    if flag:
+        rp("".join(stack), x, y, ans, False)
+    
+def solve():
+
+    string = input()
+    x, y = map(int, input().split())
+    ans = [0]
+
+    if x  > y:
+        pr(string, x, y, ans, True)
+    else:
+        rp(string, x, y, ans, True)
+    print(ans[0])
+        
+
+for _ in range(int(input())):
+    solve()
+Complexity Analysis:
+
+
+Time complexity is O(n), where n = length of string S.
+Space Complexity O(n) extra auxilary space for the stack.
+google
+india
+google interview
+google online challenge
+Comments: 5
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+gerrob's avatar
+Robert Gerbicz
+1079
+Last Edit: August 23, 2020 11:24 PM
+
+Read More
+You can do it also in O(1) memory and still in O(n) time and that is obviously optimal here.
+If Y>X then just swap letters 'p' and 'r' in the string and swap X and Y. So you can assume that X>=Y.
+A block is a sequence of letters that contain only p and r letters, if you remove some pr, rp strings you will still remain in the same block. As mentioned the greedy works here, so first remove only pr from string, for this count the 'p' and 'r' letters in the string. You can easily check whether you can remove a pr from the string or not: if you see 'r' and count_p>0.
+Notice that after these pr removal operations you would left the block as rrrrpppppppp so some r (possibly zero) and after that some p, from this you can make min(count_p,count_r) rp strings.
+Not tested [only the sample input], but should be good.
+
+
+int pr_string(string s,int X,int Y){
+    
+    int n=s.length();
+    
+    if(Y>X){
+        for(int i=0;i<n;i++){
+            if(s[i]=='p')s[i]='r';
+            else if(s[i]=='r')s[i]='p';
+        }
+        swap(X,Y);
+    }
+    // now X>=Y
+    int ans=0;
+    int count_p=0;
+    int count_r=0;
+    for(int i=0;i<n;i++){
+        if(s[i]=='p')  count_p++;
+        else if(s[i]=='r'){
+            if(count_p>0)  { count_p--; ans+=X; }
+            else  count_r++;
+        }
+        else{
+            ans+=min(count_p,count_r)*Y;
+            count_p=0;
+            count_r=0;
+        }
+    }
+    ans+=min(count_p,count_r)*Y;
+    return ans;
+}
+
+int main(void){
+    
+    cout<<pr_string("abppprrr",5,4)<<endl;
+    cout<<pr_string("prprprrp",7,10)<<endl;
+    cout<<pr_string("abcdpqrpqr",3,4)<<endl;
+ 
+    return 0;
+}
+// output: 15 37 4
+14
+Show 1 reply
+Reply
+Share
+Report
+mantrishaney728's avatar
+mantrishaney728
+3
+September 15, 2020 1:07 PM
+
+Read More
+Here is a solution using memoization.
+Just remember the string previously encountered and avoid recalculation.
+
+
+t = int(input())
+
+
+def solve(st, memo, x, y):
+    if st in memo:
+        return memo[st]
+
+    if st == "pr":
+        return x
+
+    if st == "rp":
+        return y
+
+    if st.count("p") == 0 or st.count("r") == 0:
+        return 0
+
+    if len(st) <=1:
+        return 0
+
+    memo[st] = 0
+    for i in range(len(st)):
+        if st[i] == "p":
+            if i+1<len(st) and st[i + 1] == "r":
+                memo[st] = max(memo[st], solve(st[0:i]+st[i+2:], memo, x, y) + x)
+        if st[i] == "r":
+            if i+1<len(st) and st[i + 1] == "p":
+                memo[st] = max(memo[st], solve(st[0:i]+st[i+2:], memo, x, y) + y)
+
+    return memo[st]
+
+
+for _ in range(t):
+    st = input().strip()
+    x, y = list(map(int, input().strip().split()))
+    memo = {}
+    print(solve(st, memo, x, y))
+3
+Reply
+Share
+Report
+khalid4060's avatar
+khalid ansari
+2
+Last Edit: September 26, 2020 1:45 AM
+
+https://leetcode.com/discuss/interview-question/806708/Google-or-OA-2021-or-The-Maximum-Path
+
+Google | OA 2021 | The Maximum Path
+0
+susmitha_13's avatar
+Susmitha
+10
+August 23, 2020 9:23 AM
+
+771 VIEWS
+
+Position : Software Engineer III
+Location : India
+
+
+The Maximum Path
+Problem Statement -
+
+
+You are given a tree with N nodes. Each node is assigned a value a (1 <= a <= N)
+Find the maximum path between any two nodes. Nodes can be same also.
+
+
+Input Format -
+First line is the number of testcases T
+The first line of each testcase contains N denoting number of nodes in the tree
+Second contains N spaced integers denoting the values (a)
+Next N-1 lines of each testcase contains two integers U and V, denoting the edge between the node U to V of a tree.
+
+
+Sample Input
+
+
+1
+5
+4 -1 -3 5 7
+1 2
+1 3 
+2 4
+2 5
+Sample Output
+11
+
+
+Constraints
+1 <= T <= 10
+1 <= N <= 10000
+-1000000 <= a[i] <= 1000000
+1 <= U, V < N
+
+google
+india
+onsite
+google question
+Comments: 2
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+chiranjev's avatar
+Chiranjev Koul
+29
+August 25, 2020 12:58 PM
+
+Read More
+what is the approach to this problem? Do we need to create a tree DS or adjacency list will work?
+
+0
+Reply
+Share
+Report
+beerus_25's avatar
+Kartik Mudgal
+
+222
+August 23, 2020 9:30 AM
+
+Read More
+The question is an extension of this question.
+The only difference is that here the tree in n-ary.
+https://leetcode.com/problems/binary-tree-maximum-path-sum/
+
+0
+Reply
+Share
+Report
+
+https://leetcode.com/discuss/interview-question/809870/Google-or-Phone-Screen-or-India-or-Reject
+
+Google | Phone Screen | India | Reject
+1
+Anonymous User
+Anonymous User
+Last Edit: August 25, 2020 6:54 AM
+
+1.3K VIEWS
+
+Length of the minimum consecutive subarray with sum = K
+Input K = 5, buckets = {1 2 2 5 4 1}
+Output 1
+
+
+int minBucketsWithSumK(int k, vector<int> buckets) {
+  if (buckets.empty() || k <= 0) {
+    return 0;
+  }
+  
+  int size = buckets.size();
+  int j = 0, i = 0, sum = 0;
+  int result = INT_MAX;
+  
+  while (i < size) {
+    // First Running i until sum < k
+    while (sum < k && i < size) {
+      sum += buckets[i];
+      i++;
+    }
+
+    // Then, Running j until sum > k
+    while (sum > k && j < i) {
+      sum -= buckets[j];
+      j++;
+    }    
+  
+    if (sum == k) {
+      result = min(result, i-j);
+    }
+  }
+  
+  return result;
+}
+
+The above code will give an ifinite loop for above input as once i = 3 and j = 0 and sum = 5, it will go in an ifinite solution.
+
+
+int minBucketsWithSumK(int k, vector<int> buckets) {
+  if (buckets.empty() || k <= 0) {
+    return 0;
+  }
+  
+  int size = buckets.size();
+  int j = 0, i = 0, sum = 0;
+  int result = INT_MAX;
+  
+  while (i < size) {
+    // First Running i until sum < k
+    while (sum < k && i < size) {
+      sum += buckets[i];
+      i++;
+    }
+
+    // Then, Running j until sum > k
+    while (sum > k && j < i) {
+      sum -= buckets[j];
+      j++;
+    }    
+  
+    if (sum == k) {
+      result = min(result, i-j);
+	 
+	 // UPDATE: move i to the next index and update sum
+	  if (i < size) {
+        sum += buckets[i++];
+      }
+    }
+  }
+  
+  return result;
+}
+
+Adding the above update in the code solves the purpose, but is not a neat way. Can anyone provide an alternate way to fix the above code using same two inner loops logic?
+
+https://leetcode.com/discuss/interview-question/813115/Google-or-SDE-or-Questions
+
+Google | SDE | Questions
+7
+venkat8096's avatar
+Venkat raj
+27
+Last Edit: August 27, 2020 8:44 PM
+
+3.1K VIEWS
+
+Given an array consisting of N distinct integers and another array consisting of M integers(not necessarily distinct) . You need to find out the minimum number of elements added to B so that A becomes the subsequence of B.
+A subsequence is a sequence that can be derived by deleting some or no elements from the sequence without changing the order of remaining elements.
+Input format
+First line contains T (number of testcases)
+for each test case
+first line has N and M
+second line contains N integers seperated by space
+Third line contains M integers seperated by space
+Output
+Output the min no of elements to be added to array B so that the array A becomes the sub sequence of B
+
+
+Constraints
+1 < T <= 10
+1 < N < 10^7
+1 < M < 10^7
+
+
+I tried this way.... but did not get accepted
+I have found out the length of the longest common subsequence of array A and array B using Dynamic programming.
+Then I returned*** min(0, len(A) - lengthofcommonsubsequenceofAandB)***
+I is showing me the memory error..
+So I again tried using 2 x N matrix but there my code was showing the time limit exceeded. where did I go wrong???
+
+
+If any one has the solution or knows how to solve this please help me....
+
+google
+intern
+india
+internship
+google interview
+google question
+google-newgrad
+google assesment
+need solution
+Comments: 8
+BestMost VotesNewest to OldestOldest to Newest
+Type comment here... (Markdown is supported)
+
+Preview
+
+Post
+anh1l1ator's avatar
+Ram Bhagwan
+11
+Last Edit: September 6, 2020 2:00 PM
+
+Read More
+Replace all known elements in B with:
+
+
+B*[i] = j where A[j] = B[i] (A is unique Array)
+B*[i] = None where there exists no A[j] = B[i]
+If we do LIS on B* array we will find the maximum Length of A which can be created from existing B.
+The answer should be A.size() - LIS(B*).
+
+10
+Reply
+Share
+Report
+srinivas_8025's avatar
+srinivas_8025
+
+69
+October 2, 2020 4:07 PM
+
+Read More
+It is one of the common problems which related to LCS and LIS, so since the first array(A) would be having distinct elements, then just remove the elements from B which are not present in A. later on replace the remaining elements of B with the corresponding index of A,and then find LIS using nlogn method.
+
+
+for eg.
+A = 32 23 11
+B = 4 23 32 5 32 11
+
+
+after removing non-existent elements
+newB = 23 32 32 11
+
+
+replace newB with indices
+newB = [1,0,0,2]
+
+
+just find the LIS of newB using nlogn method,
+
+8
+Reply
+Share
+Report
+moneypro's avatar
+Hong
+2
+Last Edit: September 9, 2020 9:56 AM
+
+Read More
+A quick version without cleaning up the conditions and statements. You can cut down 1 of the initial ifs by ordering, but I want to make it explicit. You can also use an int to take in the comparison value too. Also, I don't think any memoization is needed since the previous index always gets reset, and both are only incrementing. Correct me if I'm wrong.
+
+
+/**
+ * Given an array consisting of N distinct integers and another array consisting of M integers(not necessarily distinct).
+ * You need to find out the minimum number of elements added to B so that A becomes the subsequence of B.
+ */
+public final class Subsequence {
+    public int apply(final int[] distinct, final int[] supersequence) {
+        return findMinimumAdditionalElementLength(distinct, supersequence, 0, 0);
+    }
+
+    private int findMinimumAdditionalElementLength(final int[] distinct,
+                                                  final int[] supersequence,
+                                                  int distinctIndex,
+                                                  int supersequenceIndex) {
+        if (distinctIndex == distinct.length && supersequenceIndex == supersequence.length)
+            return 0;
+        if (supersequenceIndex == supersequence.length)
+            return distinct.length - distinctIndex;
+        if (distinctIndex == distinct.length)
+            return 0;
+        if (distinct[distinctIndex] == supersequence[supersequenceIndex]) {
+            return Math.min(
+                    findMinimumAdditionalElementLength(distinct, supersequence, distinctIndex + 1, supersequenceIndex + 1),
+                    findMinimumAdditionalElementLength(distinct, supersequence, 0, supersequenceIndex + 1)
+                    );
+        }
+        return Math.min(
+                1 + findMinimumAdditionalElementLength(distinct, supersequence, distinctIndex + 1, supersequenceIndex),
+                findMinimumAdditionalElementLength(distinct, supersequence, 0, supersequenceIndex + 1)
+        );
+    }
+}
+2
+Show 2 replies
+Reply
+Share
+Report
+J__K's avatar
+J__K
+
+46
+August 27, 2020 11:25 PM
+
+Read More
+you should be using the lcs in nlogn time complexity based on the constraints given in question
+Its already described in some previous posts of this question
+
+0
+Show 2 replies
+Reply
+Share
+Report
+hiitsme's avatar
+scdkjabhdgsje
+346
+October 20, 2020 10:18 AM
+
+Read More
+I believe this is similar to finding the Shortest Common Supersubsequence
+
+0
+Reply
+Share
+Report
+gunseli's avatar
+Gunseli Cizmeli
+23
+October 7, 2020 8:09 PM
+
+Read More
+thanks for sharing. could you please edit the question to remove M/N - A/B confusion?
+
+here we have may leetcode dission urls and there are dissuciocins in that link below it. I need you to create a summariy of all these discusiosin intoa  table so the link would be one column, the questions ouwld bne another column and the links to leetcode questions if available would be one columns. so per link there cna be multiple ques
