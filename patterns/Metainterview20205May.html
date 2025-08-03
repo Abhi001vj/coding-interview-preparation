@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive LeetCode Problem Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Application Structure Plan: 
+        The SPA is structured with a main header, a navigation sidebar, and a content area.
+        - Header: Displays the application title.
+        - Navigation Sidebar: Allows users to switch between:
+            1. Overview/Dashboard: Shows summary statistics and charts (problem distribution by pattern and difficulty).
+            2. DSA Patterns: Users can select a specific DSA pattern to view its overview, general templates, and a detailed, filterable/sortable table of associated LeetCode problems.
+            3. Meta Interview Guide: Displays the summarized interview process information.
+            4. Search/Filter Bar: Integrated within relevant views (e.g., DSA Patterns view for problem table).
+        - Content Area: Dynamically updates to display the selected view.
+        User Flow:
+        1. User lands on Overview.
+        2. User can navigate to DSA Patterns, select a pattern, then filter/sort problems.
+        3. User can navigate to the Interview Guide.
+        This structure was chosen for usability, providing clear entry points to different types of information from the report. Thematic sections (DSA patterns) are central, with supporting overview and guidance sections. This allows users to either get a broad understanding or dive deep into specific areas of interest.
+    -->
+    <!-- Visualization & Content Choices:
+        - Overview Page:
+            - Goal: Inform about content structure.
+            - Viz/Presentation: Bar chart for DSA Pattern Distribution, Pie chart for Difficulty Distribution.
+            - Interaction: Hover tooltips on charts.
+            - Justification: Visual summary of report's scope.
+            - Library: Chart.js.
+        - DSA Patterns Page:
+            - Goal: Inform, Compare, Organize.
+            - Viz/Presentation: Textual overview of pattern, code block for template, interactive HTML table for problems.
+            - Interaction: Dropdown to select pattern, text input to filter problems by name/number, clickable table headers for sorting.
+            - Justification: Allows deep dive into specific patterns and their associated problems, with tools for exploration.
+            - Library: Vanilla JS for table, no specific viz library beyond text/HTML.
+        - Meta Interview Guide Page:
+            - Goal: Inform.
+            - Viz/Presentation: Formatted text (paragraphs, lists).
+            - Interaction: None beyond scrolling.
+            - Justification: Direct presentation of textual guidance.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Default max-width, can be adjusted by Tailwind classes per chart */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 400px; /* Max height */
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        /* For sortable table headers */
+        .sortable:hover { cursor: pointer; background-color: #e9d5ff; /* Light purple for hover */ }
+        .sort-asc::after { content: " ▲"; }
+        .sort-desc::after { content: " ▼"; }
+
+        /* Custom scrollbar for better aesthetics if needed */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px;}
+        ::-webkit-scrollbar-thumb { background: #a855f7; border-radius: 10px;} /* Purple-600 */
+        ::-webkit-scrollbar-thumb:hover { background: #9333ea; } /* Purple-700 */
+
+        /* Sidebar and content transition */
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        #contentArea { transition: margin-left 0.3s ease-in-out; }
+        
+        /* Active nav link style */
+        .nav-link.active {
+            background-color: #8b5cf6; /* Violet-500 */
+            color: white;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div class="flex h-screen overflow-hidden">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-purple-700 text-white p-6 space-y-6 transform -translate-x-full md:translate-x-0 md:relative md:flex md:flex-col">
+            <h1 class="text-2xl font-bold border-b border-purple-500 pb-3">LeetCode Explorer</h1>
+            <nav class="flex-grow space-y-2">
+                <a href="#" id="navOverview" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-600 active">Overview</a>
+                <div class="relative">
+                    <button id="navDsaPatternsToggle" class="w-full text-left block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-600 focus:outline-none">
+                        DSA Patterns <span class="float-right" id="dsaArrow">&#9662;</span>
+                    </button>
+                    <div id="dsaPatternsSubmenu" class="hidden mt-1 pl-4 space-y-1 bg-purple-600 rounded-md">
+                        </div>
+                </div>
+                <a href="#" id="navInterviewGuide" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-purple-600">Meta Interview Guide</a>
+            </nav>
+            <button id="closeSidebarButton" class="md:hidden absolute top-4 right-4 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </aside>
+
+        <main id="contentArea" class="flex-1 flex flex-col overflow-y-auto">
+            <header class="bg-white shadow-md p-4 flex justify-between items-center">
+                <button id="menuButton" class="md:hidden text-purple-700 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-13.5 5.25h13.5" />
+                    </svg>
+                </button>
+                <h2 id="currentViewTitle" class="text-xl font-semibold text-purple-700">Overview</h2>
+                <div></div> </header>
+
+            <div class="p-4 md:p-8 space-y-8 flex-grow">
+                <section id="overviewSection" class="space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-purple-600 mb-3">Welcome!</h3>
+                        <p class="text-slate-700 leading-relaxed">
+                            This interactive application helps you explore the LeetCode problem analysis report.
+                            Navigate using the sidebar to view problem distributions, deep dive into specific DSA patterns,
+                            and review the Meta interview preparation guide. The goal is to make the rich information from the report
+                            more accessible and easier to digest for your interview preparation.
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="text-lg font-semibold text-purple-600 mb-4">Problem Distribution by DSA Pattern</h4>
+                            <div class="chart-container mx-auto max-w-xl h-72 md:h-80">
+                                <canvas id="dsaPatternChart"></canvas>
+                            </div>
+                             <p class="text-sm text-slate-600 mt-2 text-center">This chart illustrates the number of problems analyzed for each major Data Structures and Algorithms pattern.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="text-lg font-semibold text-purple-600 mb-4">Problem Distribution by Difficulty</h4>
+                            <div class="chart-container mx-auto max-w-md h-72 md:h-80">
+                                <canvas id="difficultyChart"></canvas>
+                            </div>
+                            <p class="text-sm text-slate-600 mt-2 text-center">This chart shows the breakdown of the analyzed problems by their reported difficulty level.</p>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h4 class="text-lg font-semibold text-purple-600 mb-2">Key Statistics</h4>
+                        <p id="totalProblemsStat" class="text-slate-700"></p>
+                    </div>
+                </section>
+
+                <section id="dsaPatternsSection" class="hidden space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-semibold text-purple-600 mb-3">DSA Pattern Explorer</h3>
+                        <p class="text-slate-700 leading-relaxed mb-4">
+                            Select a Data Structures and Algorithms (DSA) pattern from the sidebar navigation (under "DSA Patterns") or the dropdown below to learn more about it.
+                            You'll find an overview of the pattern, tips for recognizing it, a general code template, typical complexities,
+                            and a detailed list of relevant LeetCode problems from the analyzed set. You can filter the problem list by name/number and sort by various columns.
+                        </p>
+                         <select id="dsaPatternSelectorDropdown" class="w-full md:w-1/2 p-2 border border-slate-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 mb-6">
+                            <option value="">-- Select a DSA Pattern --</option>
+                         </select>
+                    </div>
+                    <div id="patternDetailContainer" class="bg-white p-6 rounded-lg shadow-lg space-y-4">
+                        <h4 id="selectedPatternTitle" class="text-xl font-semibold text-purple-600"></h4>
+                        <div id="patternOverviewContent" class="text-slate-700 space-y-2"></div>
+                        <h5 class="text-md font-semibold text-purple-500 mt-4">Recognizing the Pattern:</h5>
+                        <div id="patternRecognizingContent" class="text-slate-700 space-y-2"></div>
+                        <h5 class="text-md font-semibold text-purple-500 mt-4">General Template:</h5>
+                        <pre class="bg-slate-100 p-3 rounded-md overflow-x-auto text-sm"><code id="patternTemplateContent" class="language-python"></code></pre>
+                        <h5 class="text-md font-semibold text-purple-500 mt-4">Typical Big O Notation:</h5>
+                        <div id="patternBigOContent" class="text-slate-700 space-y-2"></div>
+
+                        <h5 class="text-md font-semibold text-purple-500 mt-6 mb-3">Associated Problems:</h5>
+                        <input type="text" id="problemFilterInput" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 mb-4" placeholder="Filter problems by name or number...">
+                        <div class="overflow-x-auto">
+                            <table id="problemsTable" class="min-w-full bg-white border border-slate-200">
+                                <thead class="bg-purple-100 text-purple-700">
+                                    <tr>
+                                        <th class="p-3 text-left text-sm font-semibold sortable" data-sort="id">#</th>
+                                        <th class="p-3 text-left text-sm font-semibold sortable" data-sort="name">Problem Name</th>
+                                        <th class="p-3 text-left text-sm font-semibold sortable" data-sort="difficulty">Difficulty</th>
+                                        <th class="p-3 text-left text-sm font-semibold sortable" data-sort="successRate">Success</th>
+                                        <th class="p-3 text-left text-sm font-semibold">Algo Approach</th>
+                                        <th class="p-3 text-left text-sm font-semibold sortable" data-sort="timeComplexity">Time</th>
+                                        <th class="p-3 text-left text-sm font-semibold sortable" data-sort="spaceComplexity">Space</th>
+                                        <th class="p-3 text-left text-sm font-semibold">Interview Tips</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="problemsTableBody" class="text-slate-700 text-sm">
+                                    </tbody>
+                            </table>
+                        </div>
+                         <p id="noProblemsMessage" class="text-center text-slate-500 py-4 hidden">No problems match the current filter for this pattern.</p>
+                    </div>
+                </section>
+
+                <section id="interviewGuideSection" class="hidden bg-white p-6 rounded-lg shadow-lg space-y-4">
+                    <h3 class="text-2xl font-semibold text-purple-600 mb-3">Meta Interview Guide Summary</h3>
+                    <p class="text-slate-700 leading-relaxed mb-4">
+                        This section provides a summary of key points regarding Meta's interview process, based on the provided FAQs.
+                        It covers aspects from team matching to technical interview conduct and post-interview expectations.
+                    </p>
+                    <div id="interviewGuideContent" class="text-slate-700 space-y-3 leading-relaxed">
+                        </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+<script>
+// --- DATA (Extracted and structured from the report) ---
+const problemsData = [
+    { id: "43", name: "Multiply Strings", difficulty: "Med.", successRate: "42.2%", patterns: ["String Manipulation", "Math"], algoApproach: "Manual multiplication algorithm. Multiply num1 by each digit of num2. Store intermediate products and sum them up.", timeComplexity: "O(MN)", spaceComplexity: "O(M+N)", interviewTips: "Simulate grade-school multiplication. Careful with indexing and carries.", leetCodeLinkBase: "multiply-strings" },
+    { id: "65", name: "Valid Number", difficulty: "Hard", successRate: "21.5%", patterns: ["String Manipulation", "Finite Automata"], algoApproach: "Define states for parsing: start, sign, integer, dot, fraction, exponent, etc. Transition based on current char.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Complex due to many rules. State machine is robust.", leetCodeLinkBase: "valid-number" },
+    { id: "269", name: "Alien Dictionary", difficulty: "Hard", successRate: "36.6%", patterns: ["Graphs", "Topological Sort", "String Manipulation"], algoApproach: "Build graph: chars are nodes. c1 -> c2 if c1 before c2. Compare adjacent words. Perform topological sort.", timeComplexity: "O(C+V+E)", spaceComplexity: "O(V+E)", interviewTips: "Graph construction is tricky. Cycle means invalid.", leetCodeLinkBase: "alien-dictionary" },
+    { id: "282", name: "Expression Add Operators", difficulty: "Hard", successRate: "41.5%", patterns: ["Backtracking", "String Manipulation"], algoApproach: "DFS: (index, prev_operand, current_eval, path). Try +, -, * with current operand. Handle '*' precedence.", timeComplexity: "O(N*4^N)", spaceComplexity: "O(N)", interviewTips: "Tricky '*' operator. Handle multi-digit operands and leading zeros.", leetCodeLinkBase: "expression-add-operators" },
+    { id: "827", name: "Making A Large Island", difficulty: "Hard", successRate: "54.6%", patterns: ["Graphs", "DFS", "Union-Find", "Matrix Operations"], algoApproach: "1. DFS/BFS to find islands, assign ID, calculate size. 2. Iterate 0s, check neighbors, sum sizes of unique adjacent islands + 1.", timeComplexity: "O(N^2)", spaceComplexity: "O(N^2)", interviewTips: "Two-pass. First to ID islands, second to check 0s.", leetCodeLinkBase: "making-a-large-island" },
+    { id: "443", name: "String Compression", difficulty: "Med.", successRate: "57.9%", patterns: ["String Manipulation", "Two Pointers"], algoApproach: "Iterate with read pointer. Count consecutive chars. Write pointer for in-place modification. Append char then count digits if count > 1.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "In-place modification. Careful with count > 9.", leetCodeLinkBase: "string-compression" },
+    { id: "29", name: "Divide Two Integers", difficulty: "Med.", successRate: "18.3%", patterns: ["Math & Number Theory", "Bit Manipulation"], algoApproach: "Simulate division using subtraction. Optimize by subtracting powers of 2 of divisor. Handle signs and overflow.", timeComplexity: "O(log N)", spaceComplexity: "O(1)", interviewTips: "Bit manipulation for efficiency. Edge cases are tricky.", leetCodeLinkBase: "divide-two-integers" },
+    { id: "224", name: "Basic Calculator", difficulty: "Hard", successRate: "45.4%", patterns: ["Stack", "String Manipulation", "Recursion"], algoApproach: "Evaluate expressions with +, -, (). Use two stacks (numbers, operators) or recursion for sub-expressions in ().", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Handle signs, parentheses precedence. Recursion is elegant.", leetCodeLinkBase: "basic-calculator" },
+    { id: "825", name: "Friends Of Appropriate Ages", difficulty: "Med.", successRate: "49.0%", patterns: ["Arrays & Hashing", "Counting Sort"], algoApproach: "Count age frequencies. Iterate ageA, then ageB. Apply conditions: ageB <= 0.5*ageA+7, ageB > ageA, etc. Use prefix sums on counts for ranges.", timeComplexity: "O(A^2) or O(N+A)", spaceComplexity: "O(A)", interviewTips: "A is range of ages. Constraints are key.", leetCodeLinkBase: "friends-of-appropriate-ages" },
+    { id: "229", name: "Majority Element II", difficulty: "Med.", successRate: "54.2%", patterns: ["Arrays & Hashing", "Boyer-Moore Voting"], algoApproach: "Extended Boyer-Moore for two candidates (elements appearing > n/3 times). Or hash map for frequencies.", timeComplexity: "O(N)", spaceComplexity: "O(1)/O(N)", interviewTips: "Boyer-Moore is optimal. Hash map simpler first.", leetCodeLinkBase: "majority-element-ii" },
+    { id: "1493", name: "Longest Subarray of 1's After Deleting One Element", difficulty: "Med.", successRate: "69.1%", patterns: ["Arrays & Hashing", "Sliding Window"], algoApproach: "Find longest subarray with at most one 0. `max_len = max(max_len, right - left)`. If all 1s, return N-1.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Window size is `right-left+1`, one deletion makes it `right-left`.", leetCodeLinkBase: "longest-subarray-of-1s-after-deleting-one-element" },
+    { id: "126", name: "Word Ladder II", difficulty: "Hard", successRate: "27.2%", patterns: ["Graphs", "BFS", "DFS", "Backtracking"], algoApproach: "1. BFS for shortest path length & parent pointers. 2. DFS/Backtrack from endWord using parents to reconstruct all shortest paths.", timeComplexity: "O(N*L^2 + Paths)", spaceComplexity: "O(N*L)", interviewTips: "BFS for levels/parents, DFS for paths.", leetCodeLinkBase: "word-ladder-ii" },
+    { id: "489", name: "Robot Room Cleaner", difficulty: "Hard", successRate: "77.4%", patterns: ["Graphs", "DFS", "Backtracking"], algoApproach: "DFS. State: (row, col). `visited` set. Robot API: move, turn, clean. Backtrack after exploring. Maintain direction.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "N cells. Relative coordinates. Backtracking is crucial.", leetCodeLinkBase: "robot-room-cleaner" },
+    { id: "852", name: "Peak Index in a Mountain Array", difficulty: "Med.", successRate: "67.6%", patterns: ["Arrays & Hashing", "Binary Search"], algoApproach: "Binary search. If arr[mid] < arr[mid+1], peak right. Else, mid or peak left.", timeComplexity: "O(log N)", spaceComplexity: "O(1)", interviewTips: "Guaranteed mountain. Standard BS.", leetCodeLinkBase: "peak-index-in-a-mountain-array" },
+    { id: "1443", name: "Minimum Time to Collect All Apples in a Tree", difficulty: "Med.", successRate: "62.9%", patterns: ["Trees", "Graphs", "DFS"], algoApproach: "Build adj list. DFS from 0. dfs(u, parent) returns time for subtree u. If u or subtree has apple, add 2 to time (visit/return edge).", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Treat as graph. Time is 2 * #edges in paths to apples.", leetCodeLinkBase: "minimum-time-to-collect-all-apples-in-a-tree" },
+    { id: "247", name: "Strobogrammatic Number II", difficulty: "Med.", successRate: "53.2%", patterns: ["Backtracking", "String Manipulation"], algoApproach: "Build strobogrammatic numbers of length n from center outwards or pairs from ends inwards. Base cases n=0, n=1.", timeComplexity: "O(5^(N/2)*N)", spaceComplexity: "O(5^(N/2)*N)", interviewTips: "Recursive construction. Handle even/odd n. Avoid leading zeros.", leetCodeLinkBase: "strobogrammatic-number-ii" },
+    { id: "865", name: "Smallest Subtree with all the Deepest Nodes", difficulty: "Med.", successRate: "72.4%", patterns: ["Trees", "DFS"], algoApproach: "DFS returns (depth, node_of_lca_of_deepest). If left_depth==right_depth, current is LCA. Else, LCA from deeper side.", timeComplexity: "O(N)", spaceComplexity: "O(H)", interviewTips: "One pass DFS returning pair, or two passes.", leetCodeLinkBase: "smallest-subtree-with-all-the-deepest-nodes" },
+    { id: "1358", name: "Number of Substrings Containing All Three Characters", difficulty: "Med.", successRate: "73.1%", patterns: ["Sliding Window", "String Manipulation"], algoApproach: "Window [left, right]. Counts of 'a','b','c'. If window has all three, ans += len(s) - right. Shrink left.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Key insight for counting valid substrings.", leetCodeLinkBase: "number-of-substrings-containing-all-three-characters" },
+    { id: "189", name: "Rotate Array", difficulty: "Med.", successRate: "42.9%", patterns: ["Arrays & Hashing"], algoApproach: "Use reversal: reverse all, reverse first k, reverse rest. Or use extra array. k = k % n.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Explain reversal trick. Handle k > n.", leetCodeLinkBase: "rotate-array" },
+    { id: "301", name: "Remove Invalid Parentheses", difficulty: "Hard", successRate: "49.1%", patterns: ["Backtracking", "String Manipulation", "BFS"], algoApproach: "BFS: level by level, remove one char. First level with valid strings is min removals. DFS: calc min removals, then backtrack.", timeComplexity: "O(N*2^N)", spaceComplexity: "O(N^2) or O(N)", interviewTips: "BFS for shortest edit. DFS with pruning.", leetCodeLinkBase: "remove-invalid-parentheses" },
+    { id: "240", name: "Search a 2D Matrix II", difficulty: "Med.", successRate: "55.0%", patterns: ["Arrays & Hashing", "Matrix Operations", "Binary Search"], algoApproach: "Start top-right (or bottom-left). If target == current, found. If target < current, move left. If target > current, move down.", timeComplexity: "O(M+N)", spaceComplexity: "O(1)", interviewTips: "Efficient search pattern.", leetCodeLinkBase: "search-a-2d-matrix-ii" },
+    { id: "179", name: "Largest Number", difficulty: "Med.", successRate: "41.2%", patterns: ["String Manipulation", "Sorting", "Greedy"], algoApproach: "Convert numbers to strings. Custom sort: s1+s2 vs s2+s1. Concatenate. Handle leading zeros.", timeComplexity: "O(NK log N)", spaceComplexity: "O(NK)", interviewTips: "Custom comparator is key.", leetCodeLinkBase: "largest-number" },
+    { id: "304", name: "Range Sum Query 2D - Immutable", difficulty: "Med.", successRate: "56.4%", patterns: ["Arrays & Hashing", "Prefix Sum", "Matrix Operations"], algoApproach: "Precompute 2D prefix sum matrix dp[r][c]. sumRegion uses inclusion-exclusion on dp.", timeComplexity: "O(MN) init, O(1) query", spaceComplexity: "O(MN)", interviewTips: "Explain 2D prefix sum formula.", leetCodeLinkBase: "range-sum-query-2d-immutable" },
+    { id: "95", name: "Unique Binary Search Trees II", difficulty: "Med.", successRate: "60.2%", patterns: ["Dynamic Programming", "Trees", "Backtracking"], algoApproach: "Recursive generate(start, end): iterate i as root. Get left subtrees from generate(start, i-1), right from generate(i+1, end). Combine. Memoize.", timeComplexity: "O(G_N*N)", spaceComplexity: "O(G_N*N)", interviewTips: "G_N is Catalan number. DP with memoization.", leetCodeLinkBase: "unique-binary-search-trees-ii" },
+    { id: "221", name: "Maximal Square", difficulty: "Med.", successRate: "48.6%", patterns: ["Dynamic Programming", "Matrix Operations"], algoApproach: "dp[i][j] = side length of max square of '1's ending at (i,j). If matrix[i][j]=='1', dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]).", timeComplexity: "O(MN)", spaceComplexity: "O(MN) or O(N)", interviewTips: "Classic DP on grid. Space optimization.", leetCodeLinkBase: "maximal-square" },
+    { id: "525", name: "Contiguous Array", difficulty: "Med.", successRate: "49.2%", patterns: ["Arrays & Hashing", "Prefix Sum"], algoApproach: "Convert 0s to -1s. Find longest subarray with sum 0. Use hash map (prefix_sum, index).", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "0 to -1 trick. Map 0 -> -1 for initial prefix.", leetCodeLinkBase: "contiguous-array" },
+    { id: "3043", name: "Find the Length of the Longest Common Prefix", difficulty: "Med.", successRate: "56.4%", patterns: ["String Manipulation", "Arrays & Hashing", "Trie"], algoApproach: "For each number in arr1 (as string), check all its prefixes against all numbers (as strings) in arr2. Or build Trie from arr2.", timeComplexity: "O(NML) or O(NL^2)", spaceComplexity: "O(1) or O(ML) for Trie", interviewTips: "Convert numbers to strings. Brute force prefix check.", leetCodeLinkBase: "find-the-length-of-the-longest-common-prefix" }, // Note: This problem ID might be new or less common.
+    { id: "333", name: "Largest BST Subtree", difficulty: "Med.", successRate: "45.3%", patterns: ["Trees", "DFS", "BST"], algoApproach: "Post-order DFS. Node returns (is_bst, size, min_val, max_val). If node forms BST with children, update global max BST size.", timeComplexity: "O(N)", spaceComplexity: "O(H)", interviewTips: "Complex state to pass up. Base cases are leaves.", leetCodeLinkBase: "largest-bst-subtree" },
+    { id: "980", name: "Unique Paths III", difficulty: "Hard", successRate: "82.3%", patterns: ["Backtracking", "DFS", "Matrix Operations", "Bitmask DP"], algoApproach: "DFS from start to end, visiting all empty squares exactly once. Track visited (modify grid or use bitmask).", timeComplexity: "O(3^(MN)) or O(MN*2^(MN))", spaceComplexity: "O(MN)", interviewTips: "Count empty cells. Backtrack with visited set/mask.", leetCodeLinkBase: "unique-paths-iii" },
+    { id: "3371", name: "Identify the Largest Outlier in an Array", difficulty: "Med.", successRate: "35.5%", patterns: ["Arrays & Hashing", "Sorting", "Math & Number Theory"], algoApproach: "Find if most elements are even or odd. Outlier has minority parity. Count even/odd. If one count is 1, that's it.", timeComplexity: "O(N log N) or O(N)", spaceComplexity: "O(1) or O(N)", interviewTips: "Handle small N. Clarify 'outlier'.", leetCodeLinkBase: "identify-the-largest-outlier-in-an-array" }, // Note: This problem ID might be new or less common.
+    { id: "1044", name: "Longest Duplicate Substring", difficulty: "Hard", successRate: "30.8%", patterns: ["Binary Search", "String Manipulation", "Rabin-Karp"], algoApproach: "Binary search for length L. check(L): does duplicate substring of length L exist? Use Rabin-Karp (rolling hash).", timeComplexity: "O(N log N)", spaceComplexity: "O(N)", interviewTips: "BS on answer (length). Rabin-Karp for checking.", leetCodeLinkBase: "longest-duplicate-substring" },
+    { id: "204", name: "Count Primes", difficulty: "Med.", successRate: "34.7%", patterns: ["Math & Number Theory", "Sieve of Eratosthenes"], algoApproach: "Sieve of Eratosthenes. Boolean array is_prime. Mark multiples of primes as not prime.", timeComplexity: "O(N log log N)", spaceComplexity: "O(N)", interviewTips: "Sieve is efficient.", leetCodeLinkBase: "count-primes" },
+    { id: "2579", name: "Count Total Number of Colored Cells", difficulty: "Med.", successRate: "66.2%", patterns: ["Math & Number Theory", "Arrays & Hashing"], algoApproach: "Observe pattern: 1st=1, 2nd=1+4, 3rd=1+4+8. Formula: 2*n*n - 2*n + 1.", timeComplexity: "O(1)", spaceComplexity: "O(1)", interviewTips: "Derive by observing small n.", leetCodeLinkBase: "count-total-number-of-colored-cells" },
+    { id: "763", name: "Partition Labels", difficulty: "Med.", successRate: "81.5%", patterns: ["Arrays & Hashing", "String Manipulation", "Greedy", "Two Pointers"], algoApproach: "1. Record last occurrence index for each char. 2. Iterate string, maintain current_partition_end. If i == current_partition_end, partition found.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Two-pass. First for last indices.", leetCodeLinkBase: "partition-labels" },
+    { id: "3356", name: "Zero Array Transformation II", difficulty: "Med.", successRate: "43.7%", patterns: ["Arrays & Hashing", "Math & Number Theory"], algoApproach: "Simulate. If nums[i]>0 & k>0: decr=min(nums[i],k), nums[i]-=decr, k-=decr. If k=0 & nums[i]>0, impossible. Sum(nums) must be mult of k.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Problem statement variant dependent. Assume k is per pass.", leetCodeLinkBase: "zero-array-transformation-ii" }, // Note: This problem ID might be new or less common.
+    { id: "716", name: "Max Stack", difficulty: "Hard", successRate: "45.5%", patterns: ["Stack", "Design"], algoApproach: "Two stacks: main_stack, max_tracking_stack. popMax is tricky: find max, remove from main (temp buffer), rebuild. Or DLL + TreeMap for O(logN) popMax.", timeComplexity: "Varies", spaceComplexity: "O(N)", interviewTips: "Trade-offs for popMax complexity.", leetCodeLinkBase: "max-stack" },
+    { id: "399", name: "Evaluate Division", difficulty: "Med.", successRate: "63.0%", patterns: ["Graphs", "DFS", "BFS"], algoApproach: "Build graph: vars are nodes, a/b=k => a->b (k), b->a (1/k). Query (C,D): DFS/BFS C to D, multiply weights.", timeComplexity: "O(Eq + Q(V+Eg))", spaceComplexity: "O(V+Eg)", interviewTips: "Path product. Handle missing nodes/paths.", leetCodeLinkBase: "evaluate-division" },
+    { id: "1926", name: "Nearest Exit from Entrance in Maze", difficulty: "Med.", successRate: "47.5%", patterns: ["Graphs", "BFS", "Matrix Operations"], algoApproach: "BFS from entrance. State: (row, col, steps). Find first empty cell '.' on boundary that's not entrance.", timeComplexity: "O(MN)", spaceComplexity: "O(MN)", interviewTips: "Standard BFS for shortest path. Boundary check.", leetCodeLinkBase: "nearest-exit-from-entrance-in-maze" },
+    { id: "2401", name: "Longest Nice Subarray", difficulty: "Med.", successRate: "64.8%", patterns: ["Sliding Window", "Bit Manipulation", "Arrays & Hashing"], algoApproach: "Nice if (nums[i] & nums[j])==0. Window [l,r]. Maintain bitwise OR current_or. If (current_or & nums[r])!=0, shrink left by XORing nums[l] from current_or.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Bitwise OR tracks set bits.", leetCodeLinkBase: "longest-nice-subarray" },
+    { id: "3108", name: "Minimum Cost Walk in Weighted Graph", difficulty: "Hard", successRate: "68.5%", patterns: ["Graphs", "Bit Manipulation", "Union-Find"], algoApproach: "Queries [u,v,w_limit]. Is path u to v where all edges have (edge_weight & w_limit) == w_limit? Sort queries by w_limit. Use Union-Find, add edges valid for current w_limit.", timeComplexity: "O(QlogQ + ElogE + (Q+E)alphaV)", spaceComplexity: "O(V+E)", interviewTips: "Needs clarification. Assuming UF for queries (u,v,w_limit).", leetCodeLinkBase: "minimum-cost-walk-in-weighted-graph" }, // Note: This problem ID might be new or less common.
+    { id: "123", name: "Best Time to Buy and Sell Stock III", difficulty: "Hard", successRate: "50.8%", patterns: ["Dynamic Programming", "Arrays & Hashing"], algoApproach: "DP: dp[k][i] = max profit with k transactions up to day i. Simpler: buy1, sell1, buy2, sell2 variables tracking max profit for at most 2 transactions.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "State machine DP or limited transaction variables.", leetCodeLinkBase: "best-time-to-buy-and-sell-stock-iii" },
+    { id: "334", name: "Increasing Triplet Subsequence", difficulty: "Med.", successRate: "39.1%", patterns: ["Greedy", "Arrays & Hashing"], algoApproach: "Maintain first_min and second_min. Iterate. If num <= first_min, update first_min. Else if num <= second_min, update second_min. Else (num > second_min), triplet found.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Clever greedy approach.", leetCodeLinkBase: "increasing-triplet-subsequence" },
+    { id: "784", name: "Letter Case Permutation", difficulty: "Med.", successRate: "75.1%", patterns: ["Backtracking", "String Manipulation"], algoApproach: "DFS. At each char: if digit, append. If letter, try lowercase and uppercase, recurse for each.", timeComplexity: "O(2^L * N)", spaceComplexity: "O(N)", interviewTips: "L is #letters. Build string path.", leetCodeLinkBase: "letter-case-permutation" },
+    { id: "814", name: "Binary Tree Pruning", difficulty: "Med.", successRate: "72.3%", patterns: ["Trees", "DFS"], algoApproach: "Post-order DFS. prune(node): node.left=prune(node.left), node.right=prune(node.right). If node.val==0 & children null, return null.", timeComplexity: "O(N)", spaceComplexity: "O(H)", interviewTips: "Prune from bottom up.", leetCodeLinkBase: "binary-tree-pruning" },
+    { id: "1861", name: "Rotating the Box", difficulty: "Med.", successRate: "79.1%", patterns: ["Arrays & Hashing", "Matrix Operations", "Two Pointers"], algoApproach: "1. Rotate matrix 90 deg clockwise. 2. For each column, move stones '#' down past empty cells '.', stopping at obstacles '*'.", timeComplexity: "O(MN)", spaceComplexity: "O(MN)", interviewTips: "Stone dropping is like 'Move Zeroes' per column.", leetCodeLinkBase: "rotating-the-box" },
+    { id: "2551", name: "Put Marbles in Bags", difficulty: "Hard", successRate: "72.5%", patterns: ["Greedy", "Sorting", "Arrays & Hashing"], algoApproach: "Cost of split between w[i], w[i+1] is w[i]+w[i+1]. Need k-1 splits. Calculate all n-1 split costs. Sort. Pick smallest/largest k-1 costs.", timeComplexity: "O(N log N)", spaceComplexity: "O(N)", interviewTips: "w[0], w[n-1] always included. Minimize/maximize sum of split point pairs.", leetCodeLinkBase: "put-marbles-in-bags" },
+    { id: "2503", name: "Maximum Number of Points From Grid Queries", difficulty: "Hard", successRate: "59.5%", patterns: ["Graphs", "Heap (Priority Queue)", "Sorting", "Union-Find", "Matrix Operations"], algoApproach: "Sort queries by limit. Min-heap of (grid_val, r, c) to process cells by value. Union-Find for connected components <= current limit.", timeComplexity: "O(QlogQ + MNlogMN + MNalphaMN)", spaceComplexity: "O(MN+Q)", interviewTips: "Complex. Sort queries, process cells incrementally.", leetCodeLinkBase: "maximum-number-of-points-from-grid-queries" },
+    { id: "332", name: "Reconstruct Itinerary", difficulty: "Hard", successRate: "43.6%", patterns: ["Graphs", "DFS", "Greedy"], algoApproach: "Build graph (adj list, use min-heap for lexical order). DFS from 'JFK'. Post-order add to path. Greedily pick smallest lexical next airport.", timeComplexity: "O(E log E) or O(E log D_max)", spaceComplexity: "O(V+E)", interviewTips: "Hierholzer's for Eulerian path. Sorting neighbors.", leetCodeLinkBase: "reconstruct-itinerary" },
+    { id: "2140", name: "Solving Questions With Brainpower", difficulty: "Med.", successRate: "60.3%", patterns: ["Dynamic Programming", "Arrays & Hashing"], algoApproach: "DP: dp[i] = max points from questions i to n-1. dp[i] = max(dp[i+1] (skip), points[i] + dp[i + brainpower[i] + 1] (solve)). Iterate backwards.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Choice at each step: solve or skip.", leetCodeLinkBase: "solving-questions-with-brainpower" },
+    { id: "120", name: "Triangle", difficulty: "Med.", successRate: "59.1%", patterns: ["Dynamic Programming", "Arrays & Hashing"], algoApproach: "Bottom-up DP. dp[j] = min path sum ending at triangle[i][j]. dp[j] = triangle[i][j] + min(dp_prev[j], dp_prev[j-1]). Optimize to O(N) space.", timeComplexity: "O(N^2)", spaceComplexity: "O(N)", interviewTips: "N rows. Bottom-up is natural. Space optimization.", leetCodeLinkBase: "triangle" },
+    { id: "478", name: "Generate Random Point in a Circle", difficulty: "Med.", successRate: "40.9%", patterns: ["Math & Number Theory", "Randomization", "Geometry"], algoApproach: "Rejection Sampling or Polar Coordinates: r = R*sqrt(rand()), theta = 2*pi*rand(). Then convert to Cartesian.", timeComplexity: "O(1) avg", spaceComplexity: "O(1)", interviewTips: "sqrt(rand()) for r ensures uniform area distribution.", leetCodeLinkBase: "generate-random-point-in-a-circle" },
+    { id: "1482", name: "Minimum Number of Days to Make m Bouquets", difficulty: "Med.", successRate: "55.4%", patterns: ["Binary Search", "Arrays & Hashing"], algoApproach: "Binary search for number of days D. check(D): can we make m bouquets using k adjacent bloomed flowers (bloomDay[i] <= D)? Greedy check.", timeComplexity: "O(N log(max(Day)))", spaceComplexity: "O(N) or O(1)", interviewTips: "BS on answer (days). check function is greedy scan.", leetCodeLinkBase: "minimum-number-of-days-to-make-m-bouquets" },
+    { id: "368", name: "Largest Divisible Subset", difficulty: "Med.", successRate: "48.8%", patterns: ["Dynamic Programming", "Arrays & Hashing", "Sorting"], algoApproach: "Sort nums. dp[i] = size of LDS ending with nums[i]. parent[i] to reconstruct. If nums[i]%nums[j]==0, dp[i]=max(dp[i], dp[j]+1).", timeComplexity: "O(N^2)", spaceComplexity: "O(N)", interviewTips: "Similar to LIS. Reconstruct path.", leetCodeLinkBase: "largest-divisible-subset" },
+    { id: "410", name: "Split Array Largest Sum", difficulty: "Hard", successRate: "57.9%", patterns: ["Binary Search", "Dynamic Programming", "Greedy", "Arrays & Hashing"], algoApproach: "Binary search for max allowed sum S. check(S): can array be split into m subarrays each sum <= S? (Greedy check).", timeComplexity: "O(N log(Sum))", spaceComplexity: "O(1)", interviewTips: "BS on answer (max sum). Greedy check.", leetCodeLinkBase: "split-array-largest-sum" },
+    { id: "1268", name: "Search Suggestions System", difficulty: "Med.", successRate: "65.1%", patterns: ["String Manipulation", "Trie", "Sorting", "Binary Search"], algoApproach: "Sort products. For each prefix of searchWord, binary search for first product with this prefix. Collect next 3. Or use Trie.", timeComplexity: "O(NlogN + MLlogN) or O(M*L + N*L) (Trie)", spaceComplexity: "O(NL) (Trie) or O(L)", interviewTips: "Trie is efficient. Sorting + BS also works.", leetCodeLinkBase: "search-suggestions-system" },
+    { id: "149", name: "Max Points on a Line", difficulty: "Hard", successRate: "28.8%", patterns: ["Math & Number Theory", "Geometry", "Hash Table", "Arrays & Hashing"], algoApproach: "For each point p1, calculate slope with every other p2. Map slope -> count. Handle vertical lines, duplicate points.", timeComplexity: "O(N^2)", spaceComplexity: "O(N)", interviewTips: "Slope calculation (GCD). Float precision.", leetCodeLinkBase: "max-points-on-a-line" },
+    { id: "2256", name: "Minimum Average Difference", difficulty: "Med.", successRate: "43.5%", patterns: ["Arrays & Hashing", "Prefix Sum"], algoApproach: "Calculate prefix sums. Iterate i. Avg of first i+1 vs. avg of remaining n-i-1. Track min abs diff and index.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Careful with integer division, empty subarray avg.", leetCodeLinkBase: "minimum-average-difference" },
+    { id: "3272", name: "Find the Count of Good Integers", difficulty: "Hard", successRate: "69.7%", patterns: ["Dynamic Programming", "Bit Manipulation", "Math & Number Theory"], algoApproach: "Digit DP. dp(index, prev_digit_is_one, is_less_than_num_limit, is_started) = count of numbers without consecutive ones. Iterate digits 0/1.", timeComplexity: "O(logN * 2 * 2 * 2)", spaceComplexity: "O(logN)", interviewTips: "Standard Digit DP for counting numbers with constraints.", leetCodeLinkBase: "find-the-count-of-good-integers" }, // Assuming "Good Integers" means no consecutive 1s in binary. Problem ID might be for a different definition.
+    { id: "3503", name: "Longest Palindrome After Substring Concatenation I", difficulty: "Med.", successRate: "43.1%", patterns: ["String Manipulation", "Hash Table", "Greedy"], algoApproach: "Count frequencies of 2-letter words. For 'aa', 'bb', etc., use pairs. One can be center. For 'ab' and 'ba', use min(count(ab), count(ba)) pairs. Sum lengths.", timeComplexity: "O(N*L + Sigma^2)", spaceComplexity: "O(Sigma^2)", interviewTips: "L=word length (2). Sigma=alphabet size. Handle symmetric vs asymmetric pairs.", leetCodeLinkBase: "longest-palindrome-after-substring-concatenation-i" }, // Note: This problem ID might be new or less common.
+    { id: "354", name: "Russian Doll Envelopes", difficulty: "Hard", successRate: "37.3%", patterns: ["Dynamic Programming", "Sorting", "Binary Search", "Arrays & Hashing"], algoApproach: "Sort envelopes by width (asc), if same width, by height (desc). Then find LIS on heights.", timeComplexity: "O(N log N)", spaceComplexity: "O(N)", interviewTips: "Sorting trick reduces to LIS.", leetCodeLinkBase: "russian-doll-envelopes" },
+    { id: "2537", name: "Count the Number of Good Subarrays", difficulty: "Med.", successRate: "66.0%", patterns: ["Arrays & Hashing", "Sliding Window", "Hash Table"], algoApproach: "Window [l,r]. Freq map in window. pairs_count. If pairs_count >= k, ans += l+1. Shrink.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Efficiently update pairs count.", leetCodeLinkBase: "count-the-number-of-good-subarrays" },
+    { id: "2060", name: "Check if an Original String Exists Given Two Encoded Strings", difficulty: "Hard", successRate: "43.2%", patterns: ["Dynamic Programming", "String Manipulation", "Backtracking", "Recursion"], algoApproach: "DP/Recursive can_match(idx1, idx2, balance). Balance is numeric diff to cover. Explore matching chars or parsing numbers.", timeComplexity: "O(L1*L2*D)", spaceComplexity: "O(L1*L2*D)", interviewTips: "D is max numeric diff. Memoization is key.", leetCodeLinkBase: "check-if-an-original-string-exists-given-two-encoded-strings" },
+    { id: "2192", name: "All Ancestors of a Node in a Directed Acyclic Graph", difficulty: "Med.", successRate: "61.9%", patterns: ["Graphs", "DFS", "BFS"], algoApproach: "For each node i, run DFS/BFS on reversed graph from i to find all nodes that can reach i. Store sorted lists.", timeComplexity: "O(V(V+E)) or O(V+E) with optimizations", spaceComplexity: "O(V+E)", interviewTips: "DFS/BFS on reversed graph.", leetCodeLinkBase: "all-ancestors-of-a-node-in-a-directed-acyclic-graph" },
+    { id: "918", name: "Maximum Sum Circular Subarray", difficulty: "Med.", successRate: "47.5%", patterns: ["Arrays & Hashing", "Dynamic Programming"], algoApproach: "Max sum is Kadane's on normal array OR total_sum - min_subarray_sum (Kadane's on inverted array). Handle all negatives.", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "Two cases for circular. Invert signs for min sum.", leetCodeLinkBase: "maximum-sum-circular-subarray" },
+    { id: "968", name: "Binary Tree Cameras", difficulty: "Hard", successRate: "47.1%", patterns: ["Trees", "Dynamic Programming", "Greedy", "DFS"], algoApproach: "Post-order DFS. Node states: 0 (covered), 1 (has camera), 2 (needs cover). Greedy choices.", timeComplexity: "O(N)", spaceComplexity: "O(H)", interviewTips: "Tricky DP states on tree.", leetCodeLinkBase: "binary-tree-cameras" },
+    { id: "886", name: "Possible Bipartition", difficulty: "Med.", successRate: "51.4%", patterns: ["Graphs", "BFS", "DFS", "Bipartite Coloring"], algoApproach: "Graph: people are nodes, dislikes are edges. Try 2-color the graph. DFS/BFS: assign color, opposite to neighbors. Conflict means not bipartite.", timeComplexity: "O(V+E)", spaceComplexity: "O(V+E)", interviewTips: "Standard bipartite check.", leetCodeLinkBase: "possible-bipartition" },
+    { id: "935", name: "Knight Dialer", difficulty: "Med.", successRate: "61.1%", patterns: ["Dynamic Programming", "Graphs"], algoApproach: "dp[i][j] = # distinct phone numbers of length i ending on digit j. Transitions by knight moves. Sum dp[n][j].", timeComplexity: "O(N)", spaceComplexity: "O(1)", interviewTips: "N is length. Only 10 states. Space optimized DP.", leetCodeLinkBase: "knight-dialer" },
+    { id: "32", name: "Longest Valid Parentheses", difficulty: "Hard", successRate: "36.2%", patterns: ["Stack", "Dynamic Programming", "String Manipulation"], algoApproach: "DP: dp[i] = length of LVP ending at s[i]. Or Stack: stores indices of '('. If ')', pop. If stack empty, push index of ')'. Else, length = current_idx - stack.top().", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "DP state or stack logic. Two-pass scan also works.", leetCodeLinkBase: "longest-valid-parentheses" },
+    { id: "2799", name: "Count Complete Subarrays in an Array", difficulty: "Med.", successRate: "75.8%", patterns: ["Arrays & Hashing", "Sliding Window", "Hash Table"], algoApproach: "Find num_distinct_total. Window [l,r]. distinct_in_window. If == num_distinct_total, ans += len(nums)-r. Shrink.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Count total distinct first.", leetCodeLinkBase: "count-complete-subarrays-in-an-array" },
+    { id: "59", name: "Spiral Matrix II", difficulty: "Med.", successRate: "73.3%", patterns: ["Matrix Operations", "Arrays & Hashing", "Simulation"], algoApproach: "Simulate spiral path. Fill numbers 1 to n*n. Maintain boundaries: top, bottom, left, right. Fill, shrink boundaries.", timeComplexity: "O(N^2)", spaceComplexity: "O(N^2) or O(1)", interviewTips: "Careful boundary updates.", leetCodeLinkBase: "spiral-matrix-ii" },
+    { id: "166", name: "Fraction to Recurring Decimal", difficulty: "Med.", successRate: "26.1%", patterns: ["String Manipulation", "Math & Number Theory", "Hash Table"], algoApproach: "Handle sign. Integer part. For fraction, simulate long division. Map (remainder, index) to detect cycles.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "N is result length. Map tracks remainders.", leetCodeLinkBase: "fraction-to-recurring-decimal" },
+    { id: "1438", name: "Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit", difficulty: "Med.", successRate: "56.7%", patterns: ["Sliding Window", "Arrays & Hashing", "Deque"], algoApproach: "Window [l,r]. Maintain min/max in window using monotonic deques. If max-min > limit, shrink left.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Monotonic deques for O(1) window min/max.", leetCodeLinkBase: "longest-continuous-subarray-with-absolute-diff-less-than-or-equal-to-limit" },
+    { id: "946", name: "Validate Stack Sequences", difficulty: "Med.", successRate: "69.7%", patterns: ["Stack", "Arrays & Hashing", "Simulation"], algoApproach: "Simulate push from `pushed`. If stack.top() == popped[j], pop and advance j. Finally, stack empty.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Greedy simulation.", leetCodeLinkBase: "validate-stack-sequences" },
+    { id: "2302", name: "Count Subarrays With Score Less Than K", difficulty: "Hard", successRate: "62.4%", patterns: ["Binary Search", "Sliding Window", "Arrays & Hashing", "Prefix Sum"], algoApproach: "Sliding window [l,r]. Maintain sum and length. If sum*length < k, ans += r-l+1. Else shrink left. Or for each r, BS for l.", timeComplexity: "O(N) or O(N log N)", spaceComplexity: "O(N) or O(1)", interviewTips: "Sliding window is likely intended.", leetCodeLinkBase: "count-subarrays-with-score-less-than-k" },
+    { id: "542", name: "01 Matrix", difficulty: "Med.", successRate: "51.2%", patterns: ["Matrix Operations", "Graphs", "BFS"], algoApproach: "Multi-source BFS. Start BFS from all 0s simultaneously. dist[i][j] is shortest distance to a 0.", timeComplexity: "O(MN)", spaceComplexity: "O(MN)", interviewTips: "Initialize distances for 0s to 0.", leetCodeLinkBase: "01-matrix" },
+    { id: "538", name: "Convert BST to Greater Tree", difficulty: "Med.", successRate: "70.4%", patterns: ["Trees", "DFS", "BST"], algoApproach: "Reverse Inorder Traversal (Right, Root, Left). Maintain running sum of values greater than current. Update node.val += running_sum.", timeComplexity: "O(N)", spaceComplexity: "O(H)", interviewTips: "Reverse inorder visits nodes in decreasing order.", leetCodeLinkBase: "convert-bst-to-greater-tree" },
+    { id: "2071", name: "Maximum Number of Tasks You Can Assign", difficulty: "Hard", successRate: "50.7%", patterns: ["Binary Search", "Greedy", "Sorting", "Heap (Priority Queue)", "Arrays & Hashing"], algoApproach: "BS for num tasks x. check(x): can assign x tasks? Try assign x smallest tasks. Greedily match workers (with/without pills). Sort tasks/workers. Heap/two_pointers for matching.", timeComplexity: "O((N+M)logM logT)", spaceComplexity: "O(N+M)", interviewTips: "BS on answer. check() is complex greedy matching.", leetCodeLinkBase: "maximum-number-of-tasks-you-can-assign" },
+    { id: "3533", name: "Concatenated Divisibility", difficulty: "Hard", successRate: "25.1%", patterns: ["Math & Number Theory", "Dynamic Programming", "String Manipulation"], algoApproach: "DP: dp[subset_mask][last_num_idx][remainder]. (A*10^len(B) + B)%k. Complex combinatorial DP.", timeComplexity: "Varies (e.g. O(2^N * N * K))", spaceComplexity: "Varies", interviewTips: "Modulo arithmetic. Very hard contest problem.", leetCodeLinkBase: "concatenated-divisibility" }, // Note: This problem ID might be new or less common.
+    { id: "384", name: "Shuffle an Array", difficulty: "Med.", successRate: "59.0%", patterns: ["Arrays & Hashing", "Design", "Randomization"], algoApproach: "Store original array. reset(): return copy. shuffle(): Fisher-Yates on a copy.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "Fisher-Yates for unbiased shuffle.", leetCodeLinkBase: "shuffle-an-array" },
+    { id: "983", name: "Minimum Cost For Tickets", difficulty: "Med.", successRate: "67.4%", patterns: ["Dynamic Programming", "Arrays & Hashing"], algoApproach: "dp[i] = min cost to cover travel up to day i. If travel on day d: dp[d] = min(dp[d-1]+c1, dp[d-7]+c2, dp[d-30]+c3). Optimize by considering only travel days.", timeComplexity: "O(W) or O(N)", spaceComplexity: "O(W) or O(N)", interviewTips: "W=max day. Map days to DP indices.", leetCodeLinkBase: "minimum-cost-for-tickets" },
+    { id: "1254", name: "Number of Closed Islands", difficulty: "Med.", successRate: "66.7%", patterns: ["Graphs", "DFS", "BFS", "Matrix Operations"], algoApproach: "Iterate grid. If land (0) not visited: DFS/BFS. Island closed if land & all cells not on boundary. Or mark boundary-connected land first.", timeComplexity: "O(MN)", spaceComplexity: "O(MN)", interviewTips: "DFS from boundary 0s. Then count unvisited 0s.", leetCodeLinkBase: "number-of-closed-islands" },
+    { id: "3343", name: "Count Number of Balanced Permutations", difficulty: "Hard", successRate: "49.6%", patterns: ["Dynamic Programming", "Math & Number Theory", "Combinatorics"], algoApproach: "Complex combinatorial DP. dp[i][j] = ways for prefix length i, j open conditions. Definition of 'balanced permutation' is key.", timeComplexity: "Varies", spaceComplexity: "Varies", interviewTips: "Needs precise problem statement. Advanced DP.", leetCodeLinkBase: "count-number-of-balanced-permutations" }, // Note: This problem ID might be new or less common.
+    { id: "68", name: "Text Justification", difficulty: "Hard", successRate: "47.9%", patterns: ["String Manipulation", "Greedy"], algoApproach: "Greedily pack words into lines. For each line (except last), calculate spaces, distribute evenly, extra to left. Last line left-justified.", timeComplexity: "O(L_total)", spaceComplexity: "O(L_total)", interviewTips: "Many edge cases. Careful space calculation.", leetCodeLinkBase: "text-justification" },
+    { id: "778", name: "Swim in Rising Water", difficulty: "Hard", successRate: "62.6%", patterns: ["Graphs", "Heap (Priority Queue)", "Dijkstra", "Binary Search", "Union-Find", "Matrix Operations"], algoApproach: "Dijkstra: state (time,r,c). Min-heap. new_time = max(current_time, grid[nr][nc]). Or BS on time T: can reach end if water level T? (DFS/BFS).", timeComplexity: "O(N^2 log N)", spaceComplexity: "O(N^2)", interviewTips: "Dijkstra for min effort. BS on answer.", leetCodeLinkBase: "swim-in-rising-water" },
+    { id: "172", name: "Factorial Trailing Zeroes", difficulty: "Med.", successRate: "44.8%", patterns: ["Math & Number Theory"], algoApproach: "Count factors of 5 in n!. count = n/5 + n/25 + ... Each factor of 5 gives one zero.", timeComplexity: "O(log_5 N)", spaceComplexity: "O(1)", interviewTips: "Simple formula. Understand why.", leetCodeLinkBase: "factorial-trailing-zeroes" },
+    { id: "380", name: "Insert Delete GetRandom O(1)", difficulty: "Med.", successRate: "54.9%", patterns: ["Arrays & Hashing", "Design", "Hash Table"], algoApproach: "List for elements (random access). Map val -> index_in_list. Delete: swap with last, pop, update map.", timeComplexity: "O(1) avg", spaceComplexity: "O(N)", interviewTips: "Swap-with-last for O(1) list removal.", leetCodeLinkBase: "insert-delete-getrandom-o1" },
+    { id: "1778", name: "Shortest Path in a Hidden Grid", difficulty: "Med.", successRate: "44.2%", patterns: ["Graphs", "BFS", "Robot API"], algoApproach: "BFS from start (0,0 relative). State: (row,col). Visited set. Robot API: canMove, move, isTarget. Find target.", timeComplexity: "O(N)", spaceComplexity: "O(N)", interviewTips: "N cells. Relative coordinates. Standard BFS.", leetCodeLinkBase: "shortest-path-in-a-hidden-grid" }, // Note: This problem ID might be new or less common.
+    { id: "1931", name: "Painting a Grid With Three Different Colors", difficulty: "Hard", successRate: "78.8%", patterns: ["Dynamic Programming", "Bitmask DP", "Matrix Operations"], algoApproach: "DP with bitmask. dp(col_idx, prev_col_mask) = ways. prev_col_mask encodes colors of previous column. Iterate valid current column masks.", timeComplexity: "O(N * 3^M * 3^M)", spaceComplexity: "O(N * 3^M)", interviewTips: "M rows, N cols. State compression DP.", leetCodeLinkBase: "painting-a-grid-with-three-different-colors" },
+    { id: "1315", name: "Sum of Nodes with Even-Valued Grandparent", difficulty: "Med.", successRate: "85.7%", patterns: ["Trees", "DFS", "BFS"], algoApproach: "DFS/BFS. Pass parent and grandparent info. If grandparent.val is even, add current_node.val to sum.", timeComplexity: "O(N)", spaceComplexity: "O(H)", interviewTips: "Track parent/grandparent during traversal.", leetCodeLinkBase: "sum-of-nodes-with-even-valued-grandparent" },
+    { id: "3362", name: "Zero Array Transformation III", difficulty: "Med.", successRate: "55.6%", patterns: ["Arrays & Hashing", "Math & Number Theory"], algoApproach: "Problem statement unclear for a generic solution. Assuming it's a variation of min operations. If ops are on single elements, sum(ceil(nums[i]/k)).", timeComplexity: "O(N) or Varies", spaceComplexity: "O(1) or Varies", interviewTips: "Clarify problem rules for 'Zero Array Transformation III'.", leetCodeLinkBase: "zero-array-transformation-iii" } // Note: This problem ID might be new or less common.
+];
+
+
+const patternDetails = {
+    "Arrays & Hashing": {
+        overview: "Arrays provide contiguous storage with O(1) indexed access. Hashing (maps/sets) offers average O(1) for lookups, insertions, and deletions. Used for frequency counting, existence checks, prefix sums, and direct data manipulation.",
+        recognizing: "Direct element manipulation, counting occurrences, checking existence, grouping items, simplifying with pre-calculated sums/products.",
+        template: `def array_hashing_template(arr):\n    freq_map = {}\n    for element in arr:\n        freq_map[element] = freq_map.get(element, 0) + 1\n    # prefix_sum = [0] * (len(arr) + 1) ...`,
+        bigO: "Time: Array access O(1), iteration O(N). Hash ops avg O(1), worst O(N). Space: Array O(N), Hash O(K unique elements)."
+    },
+    "String Manipulation": {
+        overview: "Operations directly on strings: parsing, searching, reversing, comparing, transforming. Involves character-by-character processing.",
+        recognizing: "Input/output are strings. Tasks like finding substrings, palindromes, compression, formatting.",
+        template: `def string_manipulation_template(s: str):\n    n = len(s)\n    result_chars = []\n    # for char in s: result_chars.append(process(char))\n    return "".join(result_chars)`,
+        bigO: "Time: Often O(N). Concatenation in loop can be O(N^2) if not careful (use list.join). Space: O(N) for new strings."
+    },
+    "Dynamic Programming": {
+        overview: "For optimization or counting problems with overlapping subproblems and optimal substructure. Solves smaller subproblems and stores results (memoization/tabulation).",
+        recognizing: "Min/max value or count ways. Decisions lead to subproblems. Recursive brute-force recomputes.",
+        template: `def dp_1d_tabulation(n):\n    dp = [0] * (n + 1)\n    # dp[0] = base_case\n    for i in range(1, n + 1):\n        dp[i] = # transition from dp[i-1], etc.\n    return dp[n]`,
+        bigO: "Time: (Num states) * (Time per transition). Space: O(Num states), sometimes optimizable."
+    },
+    "Trees": {
+        overview: "Hierarchical data (nodes with parent-child). Binary Trees, BSTs common. Traversals (DFS, BFS), search, insert, delete, paths, LCA.",
+        recognizing: "Input is TreeNode or hierarchical. Questions on paths, levels, ancestors, structure.",
+        template: `class TreeNode:\n    def __init__(self, val=0, left=None, right=None): ...\ndef tree_dfs(node):\n    if not node: return\n    # process(node.val) (pre/in/post)\n    tree_dfs(node.left)\n    # process(node.val)\n    tree_dfs(node.right)\n    # process(node.val)`,
+        bigO: "Time: Most ops O(N). Balanced BST O(log N) for search/insert/delete. Space: O(H) for recursion/queue."
+    },
+    "Graphs": {
+        overview: "Nodes connected by edges (directed/undirected, weighted/unweighted). Traversal, connectivity, cycles, shortest paths, topological sort.",
+        recognizing: "Input describes connections/edges. Questions on reachability, paths, cycles, ordering. Grids can be graphs.",
+        template: `from collections import deque\ndef graph_bfs(num_nodes, edges, start_node):\n    adj = {i: [] for i in range(num_nodes)}\n    # build adj list\n    q = deque([(start_node, 0)])\n    visited = {start_node}\n    while q:\n        node, dist = q.popleft()\n        # process node\n        for neighbor in adj[node]:\n            if neighbor not in visited: ...`,
+        bigO: "Time: BFS/DFS O(V+E). Dijkstra O((V+E)logV). Space: O(V+E) for adj list, O(V) for visited/queue."
+    },
+    "Backtracking": {
+        overview: "Recursive technique building solutions incrementally, removing those failing constraints. For permutations, combinations, subsets, pathfinding.",
+        recognizing: "All possible solutions needed. Choices at each step. Revert choices on dead ends. Decision tree exploration.",
+        template: `def backtrack(current_state, params):\n    if is_solution(current_state): add_to_results(current_state); return\n    if should_prune(current_state): return\n    for choice in generate_choices(current_state):\n        make_choice(choice, current_state)\n        backtrack(current_state, params)\n        undo_choice(choice, current_state)`,
+        bigO: "Time: Can be exponential (O(N!), O(2^N)). Space: O(D) for recursion depth + results."
+    },
+    "Math & Number Theory": {
+        overview: "Uses mathematical concepts, formulas, number properties (primes, GCD), geometry, combinatorics.",
+        recognizing: "Arithmetic, number properties, geometry, counting combinations. Direct simulation too slow, hints at math shortcut.",
+        template: `import math\ndef math_problem(input_val):\n    # Example: GCD\n    # def gcd(a,b): while b: a,b=b,a%b; return a\n    # Logic specific to problem...`,
+        bigO: "Varies: O(1) for formulas, O(log N) for power/GCD, O(sqrt(N)) for primality."
+    },
+    "Binary Search": {
+        overview: "Efficiently search sorted array or find point where condition changes in monotonic search space. Can find min/max value satisfying conditions (BS on answer).",
+        recognizing: "Sorted input. Find element/index. Min/max X where check(X) is true (monotonic check).",
+        template: `def binary_search_array(arr, target):\n    low, high = 0, len(arr) - 1\n    while low <= high:\n        mid = low + (high - low) // 2\n        if arr[mid] == target: return mid\n        elif arr[mid] < target: low = mid + 1\n        else: high = mid - 1\n    return -1 # or low for insertion point`,
+        bigO: "Time: O(log N). BS on answer: O(K log M) where K is check() time, M is answer range."
+    },
+    "Sliding Window": {
+        overview: "Maintains a 'window' (subsegment of array/string) that grows/shrinks. For longest/shortest subarray/substring with properties, or max/min sum/product.",
+        recognizing: "Contiguous subarrays/substrings. Constraints on elements within window. Optimal window (min/max length, sum).",
+        template: `def sliding_window(arr):\n    left, right = 0, 0\n    # window_state, ans\n    while right < len(arr):\n        # expand window with arr[right]\n        while not condition_met(window_state):\n            # shrink window with arr[left]\n            left += 1\n        # update ans\n        right += 1\n    return ans`,
+        bigO: "Time: Often O(N) (each element visited <= twice). Space: O(K) for window state structures."
+    },
+    "Stack": {
+        overview: "LIFO. For matching pairs (parentheses), evaluating expressions, monotonic stack (next/prev greater/smaller), simulating recursion.",
+        recognizing: "Sequence processing, LIFO removal. Parentheses, expression parsing. Nearest elements with properties.",
+        template: `def stack_template(s):\n    stack = []\n    for item in s:\n        if is_opening(item): stack.append(item)\n        elif is_closing(item):\n            if not stack or not matches(stack.pop(), item): return False\n    return not stack`,
+        bigO: "Time: O(N) for N ops. Space: O(N) worst case."
+    },
+    "Greedy": {
+        overview: "Makes locally optimal choice hoping for global optimum. Not always globally optimal, but works for specific problems.",
+        recognizing: "Optimal solution (min/max). Series of choices. 'Best' immediate choice seems plausible. Proof by exchange argument.",
+        template: `def greedy_template(items):\n    # sorted_items = sorted(items, key=greedy_metric)\n    solution = initial_state()\n    for item in items:\n        if can_make_choice(item, solution):\n            make_locally_optimal_choice(item, solution)\n    return solution`,
+        bigO: "Often dominated by sorting O(N log N). Iteration usually O(N)."
+    },
+    "Matrix Operations": {
+        overview: "2D arrays (grids). Traversal (row/col, spiral, diagonal), rotation, searching, modifying based on neighbors. Graph traversals often adapted.",
+        recognizing: "Input is List[List] or grid. Geometric patterns or cell-neighbor interactions.",
+        template: `def matrix_traversal(matrix):\n    rows, cols = len(matrix), len(matrix[0])\n    for r in range(rows):\n        for c in range(cols):\n            # process matrix[r][c]`,
+        bigO: "Time: Often O(M*N). Space: O(1) or O(M*N)."
+    },
+    "Design": {
+        overview: "Design data structure or system with specific functionalities and performance (often O(1) or O(log N) ops). Choose appropriate underlying structures.",
+        recognizing: "Implement class or set of methods (LRUCache, MinStack). Specific time/space constraints.",
+        template: `class DesignedDS:\n    def __init__(self, params): # init structures\n    def method1(self, args): # implement logic`,
+        bigO: "Depends on specific design problem and constraints."
+    },
+    "Heap (Priority Queue)": {
+        overview: "Tree-based, satisfies heap property (min/max element at root). Efficiently find/extract min/max. Python's `heapq` is min-heap.",
+        recognizing: "Repeatedly find/remove min/max. 'Top K', 'Kth largest/smallest'. Scheduling. Dijkstra's, Prim's. Merging sorted streams.",
+        template: `import heapq\ndef heap_template(items, k=None):\n    min_heap = []\n    # for item in items: heapq.heappush(min_heap, item)\n    # if k: while len(min_heap) > k: heapq.heappop(min_heap)\n    # return min_heap or [heapq.heappop(min_heap) for _ in range(len(min_heap))]`,
+        bigO: "Time: Push/Pop O(log N). Peek O(1). BuildHeap O(N). Space: O(N) or O(K)."
+    },
+    "Bit Manipulation": {
+        overview: "Operations on binary representation of numbers (AND, OR, XOR, NOT, shifts).",
+        recognizing: "Constraints suggest binary form relevant. Checking/setting bits, counting set bits. XOR properties. Optimizing arithmetic.",
+        template: `def bit_manip_template(num, k):\n    # is_kth_bit_set = (num >> k) & 1\n    # num_set_kth = num | (1 << k)\n    # count = 0; while num > 0: num &= (num-1); count +=1`,
+        bigO: "Time: Bitwise ops O(1). Algorithms iterate up to #bits (O(log N) or O(WordSize)). Space: O(1)."
+    },
+    // Add other patterns if they emerge significantly from the list
+    "Sorting": { // Often a sub-component
+        overview: "Arranging elements in a specific order. Crucial preprocessing step for many algorithms (e.g., two pointers, binary search on data, greedy approaches).",
+        recognizing: "Problems where ordered data simplifies comparisons or enables efficient searching/selection. Explicit 'sort' tasks or implicit needs for order.",
+        template: `def sort_template(arr):\n    arr.sort() # Python's Timsort O(N log N)\n    # custom_sorted = sorted(arr, key=lambda x: x.some_property)`,
+        bigO: "Time: Comparison sorts O(N log N) typically. Space: O(log N) to O(N) depending on algorithm."
+    },
+    "Recursion": { // A technique, not a pattern per se, but fundamental
+        overview: "A function that calls itself to solve smaller instances of the same problem. Essential for DFS, many tree problems, backtracking, divide and conquer.",
+        recognizing: "Problem can be broken down into self-similar subproblems. Base cases define termination.",
+        template: `def recursive_function(params):\n    if base_case(params): return base_value\n    # modify params for subproblem\n    recursive_result = recursive_function(modified_params)\n    return combine_results(current_step_result, recursive_result)`,
+        bigO: "Time: Depends on branching factor and depth. Can be exponential if no memoization for overlapping subproblems. Space: O(Depth) for recursion stack."
+    },
+    "Union-Find": {
+        overview: "Data structure to keep track of a set of elements partitioned into a number of disjoint (non-overlapping) subsets. Efficiently determines if two elements are in the same subset and merges subsets.",
+        recognizing: "Problems involving connected components, cycle detection in undirected graphs, dynamic connectivity (e.g., Kruskal's MST).",
+        template: `class UnionFind:\n    def __init__(self, n):\n        self.parent = list(range(n))\n        self.rank = [0] * n\n    def find(self, i):\n        if self.parent[i] == i: return i\n        self.parent[i] = self.find(self.parent[i]) # Path compression\n        return self.parent[i]\n    def union(self, i, j):\n        root_i, root_j = self.find(i), self.find(j)\n        if root_i != root_j:\n            # Union by rank\n            if self.rank[root_i] < self.rank[root_j]: self.parent[root_i] = root_j\n            elif self.rank[root_i] > self.rank[root_j]: self.parent[root_j] = root_i\n            else: self.parent[root_j] = root_i; self.rank[root_i] += 1\n            return True\n        return False`,
+        bigO: "Time: Nearly constant O(α(N)) (inverse Ackermann function) per operation with path compression and union by rank/size. Space: O(N)."
+    },
+     "Trie": {
+        overview: "Tree-like data structure for storing a dynamic set of strings, often used for prefix searches, autocomplete, and dictionary lookups.",
+        recognizing: "Problems involving string prefixes, efficient search/insert/delete of strings, dictionary operations.",
+        template: `class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end_of_word = False\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n    def insert(self, word):\n        node = self.root\n        for char in word:\n            if char not in node.children: node.children[char] = TrieNode()\n            node = node.children[char]\n        node.is_end_of_word = True\n    # search, startsWith methods...`,
+        bigO: "Time: Insert/Search/StartsWith O(L) where L is length of word. Space: O(N*L_avg) or O(TotalChars) in worst case."
+    },
+    "Randomization": {
+        overview: "Algorithms that use randomness as part of their logic. Examples include shuffling, random sampling, probabilistic data structures.",
+        recognizing: "Problems requiring unbiased random selection, shuffling, or where randomness helps find solutions (e.g., Monte Carlo methods, though less common in typical LeetCode).",
+        template: `import random\ndef randomization_template(items):\n    # Shuffle: random.shuffle(items) (in-place)\n    # Random choice: random.choice(items)\n    # Random sample: random.sample(items, k)`,
+        bigO: "Varies. Fisher-Yates shuffle is O(N)."
+    },
+    "Geometry": {
+        overview: "Problems involving geometric shapes, points, lines, distances, areas, intersections, etc.",
+        recognizing: "Input involves coordinates, shapes. Questions about distances, intersections, properties of geometric figures.",
+        template: `import math\ndef geometry_template(point1, point2):\n    # Distance: math.sqrt((p2x-p1x)**2 + (p2y-p1y)**2)\n    # Slope: (p2y-p1y) / (p2x-p1x) (handle vertical lines)`,
+        bigO: "Varies based on complexity of geometric calculations and number of objects."
+    },
+    "Finite Automata": {
+        overview: "A mathematical model of computation consisting of states and transitions. Used for pattern matching (regex), parsing, and state-based logic.",
+        recognizing: "String parsing with complex rules, validating sequences against a pattern, problems where behavior changes based on discrete states and inputs.",
+        template: `def finite_automata_template(input_string):\n    current_state = INITIAL_STATE\n    for char in input_string:\n        current_state = transition_function(current_state, char)\n        if current_state == INVALID_STATE: return False\n    return is_accept_state(current_state)`,
+        bigO: "Time: O(N) for processing string of length N. Space: O(S) for states if explicitly stored, or O(1) if logic is hardcoded."
+    },
+    "Deque": {
+        overview: "Double-ended queue, supports adding/removing elements from both ends in O(1). Useful for sliding window min/max, BFS on certain types of graphs.",
+        recognizing: "Need efficient additions/removals at both ends. Sliding window problems requiring tracking min/max elements within the window (monotonic deque).",
+        template: `from collections import deque\ndef deque_template(items):\n    dq = deque()\n    # dq.append(item) # Add to right\n    # dq.appendleft(item) # Add to left\n    # dq.pop() # Remove from right\n    # dq.popleft() # Remove from left`,
+        bigO: "Time: O(1) for append/pop from either end. Space: O(N) to store N items."
+    },
+    "Simulation": {
+        overview: "Directly model the process described in the problem statement step-by-step.",
+        recognizing: "Problem describes a sequence of events or rules to apply. No obvious complex algorithmic pattern, just careful implementation of the rules.",
+        template: `def simulation_template(initial_state, rules, steps):\n    current_state = initial_state\n    for _ in range(steps):\n        # Apply rules to current_state to get next_state\n        current_state = next_state\n    return current_state`,
+        bigO: "Time: (Number of steps) * (Time per step). Space: Depends on state representation."
+    },
+    "Combinatorics": {
+        overview: "Branch of mathematics concerning the study of finite or countable discrete structures, including counting combinations and permutations.",
+        recognizing: "Problems asking 'how many ways...' to choose, arrange, or partition items, often with constraints.",
+        template: `import math\ndef combinations(n, k):\n    if k < 0 or k > n: return 0\n    if k == 0 or k == n: return 1\n    if k > n // 2: k = n - k\n    # return math.comb(n, k) # Python 3.8+\n    # Manual: product(n-i+1 for i in range(1,k+1)) // math.factorial(k)\n    res = 1\n    for i in range(k):\n        res = res * (n - i) // (i + 1)\n    return res`,
+        bigO: "Calculating C(n,k) can be O(k) or O(1) with precomputation/hardware. DP for combinatorial problems varies."
+    }
+    // ... add other pattern summaries as identified ...
+};
+
+
+const interviewGuideContentData = `
+<h4 class="text-lg font-semibold text-purple-500 mb-2">Team Matching:</h4>
+<ul class="list-disc pl-5 space-y-1">
+    <li>Post-interview approval, your resume is shared with hiring managers.</li>
+    <li>Recruiters facilitate connections with interested teams; calls with managers can be requested.</li>
+    <li>Mutual interest leads to a team-specific offer.</li>
+    <li>Open-mindedness is encouraged; declining 3 matches exits the process.</li>
+</ul>
+
+<h4 class="text-lg font-semibold text-purple-500 mt-4 mb-2">During the Interview:</h4>
+<ul class="list-disc pl-5 space-y-1">
+    <li><strong>Libraries:</strong> Standard library functions are okay. If a function solves the problem directly, expect to implement it.</li>
+    <li><strong>Tools:</strong> CoderPad (coding), Excalidraw (whiteboarding/diagramming). Google Drawings/physical whiteboards are alternatives.</li>
+    <li><strong>Video Conferencing:</strong> Consistent link per round. Test setup (webcam, mic, speaker, internet). Headsets are good.</li>
+    <li><strong>Attire:</strong> Casual.</li>
+    <li><strong>NDA:</strong> Required for "onsite" (full loop) stage, signed 24hrs prior.</li>
+</ul>
+
+<h4 class="text-lg font-semibold text-purple-500 mt-4 mb-2">Scheduling & Logistics:</h4>
+<ul class="list-disc pl-5 space-y-1">
+    <li>Handled by recruiter/coordinator. Reschedule sparingly.</li>
+    <li>Schedule/updates in Career Profile.</li>
+    <li>Duration: 30-60 mins/round.</li>
+    <li>Format varies (screen, technical loops, case studies).</li>
+</ul>
+
+<h4 class="text-lg font-semibold text-purple-500 mt-4 mb-2">Post-Interview:</h4>
+<ul class="list-disc pl-5 space-y-1">
+    <li>Outcome via recruiter; specific performance feedback is not provided.</li>
+    <li>Decision timeline varies.</li>
+    <li>Thank You Notes: Via Career Profile.</li>
+</ul>
+
+<h4 class="text-lg font-semibold text-purple-500 mt-4 mb-2">General Interview Approach for Meta:</h4>
+<ol class="list-decimal pl-5 space-y-1">
+    <li><strong>Clarify (Understand):</strong> Ask questions about inputs, outputs, edge cases, constraints. Work through a small example.</li>
+    <li><strong>Propose Solutions (Trade-offs):</strong> Start with brute-force if clear, then discuss optimizations. Explain time/space complexity of each.</li>
+    <li><strong>Write Code (Cleanly):</strong> Explain logic as you go. Use meaningful names. Modularize.</li>
+    <li><strong>Test and Verify:</strong> Walk through with examples, including edge cases. Identify and discuss fixes for bugs.</li>
+    <li><strong>Communicate:</strong> Think aloud. Be collaborative.</li>
+</ol>
+`;
+
+// --- Global State ---
+let currentView = 'overviewSection';
+let currentSortColumn = null;
+let currentSortDirection = 'asc';
+let currentPatternProblems = [];
+
+
+// --- UTILITY FUNCTIONS ---
+function showView(viewId, title) {
+    document.querySelectorAll('main section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    document.getElementById(viewId).classList.remove('hidden');
+    document.getElementById('currentViewTitle').textContent = title;
+    currentView = viewId;
+
+    // Update active nav link
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    if (viewId === 'overviewSection') document.getElementById('navOverview').classList.add('active');
+    else if (viewId === 'interviewGuideSection') document.getElementById('navInterviewGuide').classList.add('active');
+    // For DSA patterns, active state is handled by selectPattern
+}
+
+function generateLeetCodeLink(problem) {
+    const base = "https://leetcode.com/problems/";
+    // Simple slugification: lowercase, replace spaces with hyphens.
+    // More robust slugification might be needed for complex names.
+    const slug = problem.leetCodeLinkBase || problem.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    return `${base}${slug}/`;
+}
+
+
+// --- CHART RENDERING ---
+function renderCharts() {
+    const patternCounts = {};
+    const difficultyCounts = { "Easy": 0, "Med.": 0, "Hard": 0 };
+
+    problemsData.forEach(p => {
+        p.patterns.forEach(pattern => {
+            patternCounts[pattern] = (patternCounts[pattern] || 0) + 1;
+        });
+        if (difficultyCounts.hasOwnProperty(p.difficulty)) {
+            difficultyCounts[p.difficulty]++;
+        }
+    });
+
+    const dsaPatternCtx = document.getElementById('dsaPatternChart').getContext('2d');
+    new Chart(dsaPatternCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(patternCounts),
+            datasets: [{
+                label: '# of Problems',
+                data: Object.values(patternCounts),
+                backgroundColor: 'rgba(139, 92, 246, 0.7)', // purple-500 with opacity
+                borderColor: 'rgba(124, 58, 237, 1)', // purple-600
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
+    new Chart(difficultyCtx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(difficultyCounts),
+            datasets: [{
+                data: Object.values(difficultyCounts),
+                backgroundColor: ['rgba(52, 211, 153, 0.7)', 'rgba(251, 191, 36, 0.7)', 'rgba(239, 68, 68, 0.7)'], // emerald, amber, red
+                borderColor: ['rgba(16, 185, 129, 1)', 'rgba(245, 158, 11, 1)', 'rgba(220, 38, 38, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top'} }
+        }
+    });
+    
+    document.getElementById('totalProblemsStat').textContent = `Total Problems Analyzed: ${problemsData.length}`;
+}
+
+// --- DSA PATTERN VIEW ---
+function populatePatternSubmenuAndDropdown() {
+    const submenu = document.getElementById('dsaPatternsSubmenu');
+    const dropdown = document.getElementById('dsaPatternSelectorDropdown');
+    submenu.innerHTML = ''; // Clear previous
+    
+    Object.keys(patternDetails).sort().forEach(patternName => {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = patternName;
+        link.classList.add('nav-link', 'dsa-pattern-link', 'block', 'py-2', 'px-4', 'rounded', 'transition', 'duration-200', 'hover:bg-purple-500', 'text-sm');
+        link.dataset.pattern = patternName;
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectPattern(patternName);
+            // Update dropdown to match sidebar selection
+            dropdown.value = patternName;
+            // Close sidebar on mobile after selection
+            if (window.innerWidth < 768) {
+                 document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        });
+        submenu.appendChild(link);
+
+        const option = document.createElement('option');
+        option.value = patternName;
+        option.textContent = patternName;
+        dropdown.appendChild(option);
+    });
+
+    dropdown.addEventListener('change', (e) => {
+        if (e.target.value) {
+            selectPattern(e.target.value);
+        } else { // "-- Select a DSA Pattern --"
+            document.getElementById('patternDetailContainer').classList.add('hidden');
+            document.getElementById('selectedPatternTitle').textContent = 'Select a pattern to see details.';
+        }
+    });
+}
+
+function selectPattern(patternName) {
+    showView('dsaPatternsSection', `DSA Pattern: ${patternName}`);
+    document.getElementById('patternDetailContainer').classList.remove('hidden');
+
+    // Highlight active DSA pattern link in sidebar
+    document.querySelectorAll('.dsa-pattern-link').forEach(link => link.classList.remove('active'));
+    const activeLink = document.querySelector(`.dsa-pattern-link[data-pattern="${patternName}"]`);
+    if (activeLink) activeLink.classList.add('active');
+
+
+    const details = patternDetails[patternName];
+    if (!details) {
+        console.error("Pattern details not found for:", patternName);
+        document.getElementById('selectedPatternTitle').textContent = 'Pattern details not found.';
+        document.getElementById('patternOverviewContent').innerHTML = '';
+        document.getElementById('patternRecognizingContent').innerHTML = '';
+        document.getElementById('patternTemplateContent').textContent = '';
+        document.getElementById('patternBigOContent').innerHTML = '';
+        currentPatternProblems = [];
+        renderProblemsTable([]);
+        return;
+    }
+
+    document.getElementById('selectedPatternTitle').textContent = patternName;
+    document.getElementById('patternOverviewContent').innerHTML = `<p>${details.overview.replace(/\n/g, '<br>')}</p>`;
+    document.getElementById('patternRecognizingContent').innerHTML = `<p>${details.recognizing.replace(/\n/g, '<br>')}</p>`;
+    document.getElementById('patternTemplateContent').textContent = details.template;
+    document.getElementById('patternBigOContent').innerHTML = `<p>${details.bigO.replace(/\n/g, '<br>')}</p>`;
+    
+    currentPatternProblems = problemsData.filter(p => p.patterns.includes(patternName));
+    document.getElementById('problemFilterInput').value = ''; // Reset filter
+    renderProblemsTable(currentPatternProblems);
+}
+
+function renderProblemsTable(problemsToRender) {
+    const tbody = document.getElementById('problemsTableBody');
+    const noProblemsMsg = document.getElementById('noProblemsMessage');
+    tbody.innerHTML = '';
+
+    if (problemsToRender.length === 0) {
+        noProblemsMsg.classList.remove('hidden');
+        return;
+    }
+    noProblemsMsg.classList.add('hidden');
+
+    problemsToRender.forEach(p => {
+        const tr = tbody.insertRow();
+        tr.insertCell().textContent = p.id;
+        
+        const nameCell = tr.insertCell();
+        const link = document.createElement('a');
+        link.href = generateLeetCodeLink(p);
+        link.textContent = p.name;
+        link.target = "_blank";
+        link.classList.add('text-purple-600', 'hover:text-purple-800', 'hover:underline');
+        nameCell.appendChild(link);
+
+        tr.insertCell().textContent = p.difficulty;
+        tr.insertCell().textContent = p.successRate;
+        tr.insertCell().textContent = p.algoApproach;
+        tr.insertCell().textContent = p.timeComplexity;
+        tr.insertCell().textContent = p.spaceComplexity;
+        tr.insertCell().textContent = p.interviewTips;
+    });
+}
+
+function filterProblems() {
+    const filterText = document.getElementById('problemFilterInput').value.toLowerCase();
+    const filtered = currentPatternProblems.filter(p => 
+        p.name.toLowerCase().includes(filterText) || 
+        p.id.includes(filterText)
+    );
+    renderProblemsTable(filtered);
+}
+
+function sortProblemsTable(columnKey) {
+    if (currentSortColumn === columnKey) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = columnKey;
+        currentSortDirection = 'asc';
+    }
+
+    // Update header visual cues
+    document.querySelectorAll('#problemsTable th.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.sort === columnKey) {
+            th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+    });
+    
+    const problemsToDisplay = document.getElementById('problemFilterInput').value ? 
+        currentPatternProblems.filter(p => 
+            p.name.toLowerCase().includes(document.getElementById('problemFilterInput').value.toLowerCase()) || 
+            p.id.includes(document.getElementById('problemFilterInput').value)
+        ) 
+        : [...currentPatternProblems];
+
+
+    problemsToDisplay.sort((a, b) => {
+        let valA = a[columnKey];
+        let valB = b[columnKey];
+
+        // Special handling for numeric-like fields
+        if (columnKey === 'id' || columnKey === 'successRate') {
+            valA = parseFloat(valA.replace('%', ''));
+            valB = parseFloat(valB.replace('%', ''));
+        } else if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = valB.toLowerCase();
+        }
+        
+        let comparison = 0;
+        if (valA > valB) comparison = 1;
+        else if (valA < valB) comparison = -1;
+        
+        return currentSortDirection === 'asc' ? comparison : comparison * -1;
+    });
+    renderProblemsTable(problemsToDisplay);
+}
+
+
+// --- INTERVIEW GUIDE VIEW ---
+function renderInterviewGuide() {
+    document.getElementById('interviewGuideContent').innerHTML = interviewGuideContentData;
+}
+
+// --- EVENT LISTENERS & INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Initial view
+    showView('overviewSection', 'Overview');
+    renderCharts();
+    populatePatternSubmenuAndDropdown();
+    renderInterviewGuide();
+
+    // Navigation
+    document.getElementById('navOverview').addEventListener('click', (e) => {
+        e.preventDefault();
+        showView('overviewSection', 'Overview');
+    });
+    document.getElementById('navInterviewGuide').addEventListener('click', (e) => {
+        e.preventDefault();
+        showView('interviewGuideSection', 'Meta Interview Guide');
+    });
+
+    // DSA Patterns Submenu Toggle
+    const dsaToggle = document.getElementById('navDsaPatternsToggle');
+    const dsaSubmenu = document.getElementById('dsaPatternsSubmenu');
+    const dsaArrow = document.getElementById('dsaArrow');
+    dsaToggle.addEventListener('click', () => {
+        const isHidden = dsaSubmenu.classList.toggle('hidden');
+        dsaArrow.innerHTML = isHidden ? '&#9662;' : '&#9652;'; // Down / Up arrow
+    });
+
+    // Problem filtering
+    document.getElementById('problemFilterInput').addEventListener('input', filterProblems);
+
+    // Table sorting
+    document.querySelectorAll('#problemsTable th.sortable').forEach(th => {
+        th.addEventListener('click', () => sortProblemsTable(th.dataset.sort));
+    });
+
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const menuButton = document.getElementById('menuButton');
+    const closeSidebarButton = document.getElementById('closeSidebarButton');
+    const contentArea = document.getElementById('contentArea');
+
+    menuButton.addEventListener('click', () => {
+        sidebar.classList.remove('-translate-x-full');
+    });
+    closeSidebarButton.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+    });
+    // Optional: Close sidebar when clicking on content area on mobile
+    // contentArea.addEventListener('click', () => {
+    //    if (window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
+    //        sidebar.classList.add('-translate-x-full');
+    //    }
+    // });
+});
+
+</script>
+</body>
+</html>
