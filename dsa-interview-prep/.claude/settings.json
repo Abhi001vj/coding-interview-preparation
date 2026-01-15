@@ -1,0 +1,69 @@
+{
+  "projectContext": {
+    "description": "DSA interview preparation for Google and Meta",
+    "targetCompanies": ["Google", "Meta"],
+    "targetLevel": "Senior/Staff",
+    "language": "Python",
+    "focusAreas": [
+      "algorithm-efficiency",
+      "bug-free-code",
+      "time-management",
+      "communication"
+    ]
+  },
+  "practiceSettings": {
+    "defaultDifficulty": "medium",
+    "timeLimit": {
+      "easy": 15,
+      "medium": 25,
+      "hard": 45
+    },
+    "strictTiming": true,
+    "priorityPatterns": [
+      "snapshot-versioning",
+      "union-find",
+      "sliding-window",
+      "monotonic-stack",
+      "binary-search",
+      "graph-traversal"
+    ]
+  },
+  "interviewSimulation": {
+    "duration": 45,
+    "problemCount": 2,
+    "allowHints": true,
+    "requireVerbalization": true,
+    "requireComplexityAnalysis": true
+  },
+  "codeReview": {
+    "checkBugs": true,
+    "checkComplexity": true,
+    "checkStyle": true,
+    "checkEdgeCases": true,
+    "suggestOptimizations": true
+  },
+  "weaknessTracking": {
+    "patterns": [
+      {
+        "name": "snapshot-versioning",
+        "examples": ["LC1146-SnapshotArray", "HistorySet"],
+        "status": "weak"
+      },
+      {
+        "name": "union-find",
+        "examples": ["LC721-AccountsMerge", "URL-Deduplication"],
+        "status": "weak"
+      },
+      {
+        "name": "sliding-window",
+        "examples": ["LC1004-MaxConsecutiveOnesIII", "LC904-FruitIntoBaskets"],
+        "status": "needs-speed"
+      },
+      {
+        "name": "monotonic-stack",
+        "examples": ["LC907-SumOfSubarrayMinimums", "LC739-DailyTemperatures"],
+        "status": "weak"
+      }
+    ]
+  }
+}
