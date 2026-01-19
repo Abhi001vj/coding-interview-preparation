@@ -1011,7 +1011,303 @@ curr > top          LC 739     curr < top    LC 84
 
 ---
 
-## 5. Binary Search on Answer
+## 5. Binary Search Templates
+
+### The Two Main Binary Search Templates
+
+```
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                     BINARY SEARCH TEMPLATE DECISION                        ║
+╠═══════════════════════════════════════════════════════════════════════════╣
+║                                                                           ║
+║   TEMPLATE 1: left <= right (Save Result Pattern)                         ║
+║   ─────────────────────────────────────────────────                       ║
+║   Use when: Finding LARGEST/SMALLEST value satisfying condition           ║
+║             AND you can SKIP mid after checking                           ║
+║                                                                           ║
+║   while left <= right:                                                    ║
+║       mid = (left + right) // 2                                           ║
+║       if condition(mid):                                                  ║
+║           result = mid         # Save answer                              ║
+║           left = mid + 1       # Try for larger (or right = mid - 1)     ║
+║       else:                                                               ║
+║           right = mid - 1      # (or left = mid + 1)                     ║
+║   return result                                                           ║
+║                                                                           ║
+║   Examples: Longest duplicate substring, largest valid answer             ║
+║                                                                           ║
+╠═══════════════════════════════════════════════════════════════════════════╣
+║                                                                           ║
+║   TEMPLATE 2: left < right (Boundary Finding Pattern)                     ║
+║   ─────────────────────────────────────────────────                       ║
+║   Use when: Finding exact BOUNDARY where condition changes                ║
+║             mid COULD be the answer, CAN'T skip it                        ║
+║                                                                           ║
+║   while left < right:                                                     ║
+║       mid = (left + right) // 2                                           ║
+║       if condition(mid):                                                  ║
+║           right = mid          # mid could be answer, KEEP it             ║
+║       else:                                                               ║
+║           left = mid + 1       # mid is wrong, skip it                   ║
+║   return left  # left == right, converged to boundary                    ║
+║                                                                           ║
+║   Examples: First bad version, smallest divisor, search insert position   ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+```
+
+### 🔑 KEY INSIGHT: When to Use Which?
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Ask: "Can I SKIP mid after checking it?"                         │
+│                                                                     │
+│   YES, I can skip mid:                                              │
+│   ────────────────────                                              │
+│   • Use: left <= right                                             │
+│   • Move: left = mid + 1 AND right = mid - 1                       │
+│   • Save result when condition is true                             │
+│   • Example: "Find longest duplicate" - if length 5 works,         │
+│              save it and try 6 (skip 5)                            │
+│                                                                     │
+│   NO, mid could be the answer:                                      │
+│   ─────────────────────────────                                     │
+│   • Use: left < right                                              │
+│   • Move: right = mid (keep mid!) or left = mid + 1               │
+│   • Converge to boundary                                           │
+│   • Example: "Find first bad version" - if version 5 is bad,       │
+│              it MIGHT be the first bad, can't skip it              │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Template 1: Save Result (Finding Maximum Valid)
+
+```python
+def find_maximum_valid(lo, hi, condition):
+    """
+    Find LARGEST value where condition is True.
+
+    Condition pattern: True True True True False False
+                                      ↑
+                            Want this (largest True)
+    """
+    result = -1  # Or appropriate default
+
+    while lo <= hi:
+        mid = (lo + hi) // 2
+
+        if condition(mid):
+            result = mid       # Save! This might be answer
+            lo = mid + 1       # But try for LARGER
+        else:
+            hi = mid - 1       # Too big, go smaller
+
+    return result
+
+# Example: Longest Duplicate Substring
+# condition(length) = "does duplicate of this length exist?"
+# True for lengths 1,2,3 | False for 4,5,6
+# Want: 3 (largest True)
+```
+
+### Template 1: Save Result (Finding Minimum Valid)
+
+```python
+def find_minimum_valid(lo, hi, condition):
+    """
+    Find SMALLEST value where condition is True.
+
+    Condition pattern: False False False True True True
+                                         ↑
+                              Want this (smallest True)
+    """
+    result = -1
+
+    while lo <= hi:
+        mid = (lo + hi) // 2
+
+        if condition(mid):
+            result = mid       # Save! This might be answer
+            hi = mid - 1       # But try for SMALLER
+        else:
+            lo = mid + 1       # Too small, go larger
+
+    return result
+```
+
+### Template 2: Boundary Finding (First True)
+
+```python
+def find_first_true(lo, hi, condition):
+    """
+    Find FIRST position where condition becomes True.
+
+    Condition pattern: False False False True True True
+                                         ↑
+                              Want this (boundary)
+    """
+    while lo < hi:
+        mid = (lo + hi) // 2
+
+        if condition(mid):
+            hi = mid           # mid COULD be first True, KEEP it
+        else:
+            lo = mid + 1       # mid is False, skip it
+
+    return lo  # lo == hi, converged to boundary
+```
+
+### Template 2: Boundary Finding (Last True)
+
+```python
+def find_last_true(lo, hi, condition):
+    """
+    Find LAST position where condition is True.
+
+    Condition pattern: True True True False False False
+                                  ↑
+                       Want this (last True)
+    """
+    while lo < hi:
+        mid = (lo + hi + 1) // 2  # ⚠️ Round UP to avoid infinite loop!
+
+        if condition(mid):
+            lo = mid           # mid COULD be last True, KEEP it
+        else:
+            hi = mid - 1       # mid is False, skip it
+
+    return lo  # lo == hi, converged to boundary
+
+# ⚠️ WHY +1? Prevents infinite loop!
+# If lo=4, hi=5, mid=(4+5)//2=4
+# If condition(4) is True, lo=4 (stuck!)
+# With +1: mid=(4+5+1)//2=5, progress guaranteed
+```
+
+### Visual Comparison
+
+```
+Finding LARGEST where condition is True:
+
+Condition:  T    T    T    T    F    F    F
+Index:      1    2    3    4    5    6    7
+                      ↑
+                   Answer = 4
+
+TEMPLATE 1 (left <= right):
+─────────────────────────────
+lo=1, hi=7, mid=4: T → result=4, lo=5
+lo=5, hi=7, mid=6: F → hi=5
+lo=5, hi=5, mid=5: F → hi=4
+lo=5 > hi=4 → STOP, return result=4 ✓
+
+TEMPLATE 2 (left < right) with round-up:
+─────────────────────────────────────────
+lo=1, hi=7, mid=4: T → lo=4
+lo=4, hi=7, mid=6: F → hi=5
+lo=4, hi=5, mid=5: F → hi=4
+lo=4 == hi=4 → STOP, return 4 ✓
+```
+
+### Quick Reference Table
+
+| Goal | Template | Loop | Mid Calculation | When True | When False |
+|------|----------|------|-----------------|-----------|------------|
+| Largest valid | 1 | `<=` | `(lo+hi)//2` | `result=mid; lo=mid+1` | `hi=mid-1` |
+| Smallest valid | 1 | `<=` | `(lo+hi)//2` | `result=mid; hi=mid-1` | `lo=mid+1` |
+| First True | 2 | `<` | `(lo+hi)//2` | `hi=mid` | `lo=mid+1` |
+| Last True | 2 | `<` | `(lo+hi+1)//2` | `lo=mid` | `hi=mid-1` |
+
+### Common Mistakes
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ MISTAKE 1: Using wrong template                                     │
+│ ─────────────────────────────────                                   │
+│ Template 2 with left <= right → infinite loop or skip answer        │
+│ Template 1 with left < right → might not check all values           │
+│                                                                     │
+│ MISTAKE 2: Forgetting +1 for "last True"                           │
+│ ──────────────────────────────────────────                          │
+│ mid = (lo + hi) // 2 with lo = mid → infinite loop when hi = lo+1  │
+│                                                                     │
+│ MISTAKE 3: Wrong direction after condition                          │
+│ ──────────────────────────────────────────                          │
+│ Finding MAX but doing hi = mid - 1 when True → wrong!              │
+│ Finding MIN but doing lo = mid + 1 when True → wrong!              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Practical Examples: Same Problem, Different Templates
+
+**Problem: Longest Duplicate Substring (LC 1044)**
+
+```python
+# TEMPLATE 1: Save Result (Recommended for this problem)
+def longestDupSubstring(s):
+    def has_dup(length):
+        seen = set()
+        for i in range(len(s) - length + 1):
+            sub = s[i:i + length]
+            if sub in seen:
+                return sub
+            seen.add(sub)
+        return ""
+
+    result = ""
+    left, right = 1, len(s) - 1
+
+    while left <= right:              # Template 1
+        mid = (left + right) // 2
+        dup = has_dup(mid)
+        if dup:
+            result = dup              # Save result
+            left = mid + 1            # Try longer
+        else:
+            right = mid - 1           # Try shorter
+
+    return result
+```
+
+**Problem: First Bad Version (LC 278)**
+
+```python
+# TEMPLATE 2: Boundary Finding (Recommended for this problem)
+def firstBadVersion(n):
+    left, right = 1, n
+
+    while left < right:               # Template 2
+        mid = (left + right) // 2
+        if isBadVersion(mid):
+            right = mid               # mid COULD be first bad, keep it
+        else:
+            left = mid + 1            # mid is good, skip it
+
+    return left  # Converged to boundary
+```
+
+**Problem: Search Insert Position (LC 35)**
+
+```python
+# TEMPLATE 2: Find where target should be inserted
+def searchInsert(nums, target):
+    left, right = 0, len(nums)
+
+    while left < right:               # Template 2
+        mid = (left + right) // 2
+        if nums[mid] >= target:
+            right = mid               # mid could be insert position
+        else:
+            left = mid + 1
+
+    return left
+```
+
+---
+
+### Binary Search on Answer
 
 ### Pattern Recognition
 
@@ -1020,6 +1316,7 @@ Use when you see:
 - "Smallest divisor", "Maximum distance", "Minimum capacity"
 - The answer is a NUMBER in a RANGE, not an element in array
 - You can CHECK if a value works in O(n) or O(n log n)
+- **MONOTONIC relationship**: If condition is true for X, it's true for all values in one direction
 
 ### Template: Find MINIMUM Valid Answer
 
@@ -1055,25 +1352,86 @@ def binary_search_max_answer(lo, hi, is_valid):
     return lo
 ```
 
-### 🔑 KEY INSIGHT: MIN vs MAX
+### 🔑 KEY INSIGHT: Why `lo = mid + 1` but `hi = mid`?
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
-│   Finding MINIMUM:                                                  │
-│   • mid = (lo + hi) // 2                                           │
-│   • if valid: hi = mid                                             │
-│   • else: lo = mid + 1                                             │
+│   When INVALID (lo = mid + 1):                                     │
+│   ─────────────────────────────                                    │
+│   • mid is DEFINITELY WRONG - we KNOW it's not the answer         │
+│   • Safe to SKIP it entirely: lo = mid + 1                        │
 │                                                                     │
-│   Finding MAXIMUM:                                                  │
-│   • mid = (lo + hi + 1) // 2    ← +1 to round UP!                  │
-│   • if valid: lo = mid                                             │
-│   • else: hi = mid - 1                                             │
+│   When VALID (hi = mid):                                           │
+│   ───────────────────────                                          │
+│   • mid MIGHT BE the answer! (smallest valid we've seen)          │
+│   • We CAN'T skip it - must KEEP it in range: hi = mid            │
+│   • If we used hi = mid - 1, we might skip the actual answer!     │
 │                                                                     │
-│   WHY +1 for MAX? Prevents infinite loop when lo + 1 == hi         │
+│   THE GUARANTEE:                                                   │
+│   ─────────────────                                                │
+│   • Loop continues while lo < hi                                  │
+│   • Stops when lo == hi (they converge to same point)             │
+│   • hi only moves to VALID positions                              │
+│   • lo keeps pushing forward, skipping invalid ones               │
+│   • They MEET at the boundary = smallest valid answer!            │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+### 🔑 Visual Example: Why This Works
+
+```
+Search space: [1, 9], looking for smallest divisor where sum <= threshold
+
+divisor:  1    2    3    4    5    6    7    8    9
+valid?    ❌   ❌   ❌   ❌   ✅   ✅   ✅   ✅   ✅
+                          ^
+                    SMALLEST valid = answer!
+
+Step 1: lo=1, hi=9, mid=5
+        valid(5)? YES → hi = 5   (keep 5, might be answer)
+        [lo=1, hi=5]
+
+Step 2: lo=1, hi=5, mid=3
+        valid(3)? NO → lo = 4    (skip 3, definitely wrong)
+        [lo=4, hi=5]
+
+Step 3: lo=4, hi=5, mid=4
+        valid(4)? NO → lo = 5    (skip 4)
+        [lo=5, hi=5]
+
+STOP! lo == hi == 5 → Answer is 5
+```
+
+### 🔑 KEY INSIGHT: MIN vs MAX Templates
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   Finding MINIMUM valid:                                            │
+│   • mid = (lo + hi) // 2                                           │
+│   • if valid: hi = mid         (keep mid, search LEFT)             │
+│   • else: lo = mid + 1         (skip mid, go RIGHT)                │
+│                                                                     │
+│   Finding MAXIMUM valid:                                            │
+│   • mid = (lo + hi + 1) // 2   ← +1 to round UP!                   │
+│   • if valid: lo = mid         (keep mid, search RIGHT)            │
+│   • else: hi = mid - 1         (skip mid, go LEFT)                 │
+│                                                                     │
+│   WHY +1 for MAX? Prevents infinite loop when lo + 1 == hi         │
+│   Example: lo=4, hi=5 → mid=(4+5)//2=4 → if valid, lo=4 (stuck!)   │
+│            With +1: mid=(4+5+1)//2=5 → if valid, lo=5 (progress!)  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### The Golden Rule Table
+
+| Situation | Action | Why |
+|-----------|--------|-----|
+| `mid` is DEFINITELY wrong | `lo = mid + 1` or `hi = mid - 1` | Skip it |
+| `mid` MIGHT be the answer | `hi = mid` or `lo = mid` | Keep it in range |
 
 ### Example Problem: LC 1283 - Smallest Divisor Given Threshold
 

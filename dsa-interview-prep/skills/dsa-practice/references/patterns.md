@@ -225,8 +225,9 @@ def merge_intervals(intervals):
 ### When to Use
 - Sorted array
 - Find target or insertion point
-- "Search for answer" problems
+- "Search for answer" problems (find min/max that satisfies condition)
 - Minimize maximum / Maximize minimum
+- **Key signal**: MONOTONIC relationship (if true for X, true for all values in one direction)
 
 ### Template - Standard
 ```python
@@ -266,28 +267,89 @@ def find_first(arr, target):
     return result
 ```
 
-### Template - Answer Binary Search
+### Template - Answer Binary Search (Find MINIMUM valid)
 ```python
-def min_max_problem(arr, condition):
-    """Find minimum value that satisfies condition."""
-    left, right = min_possible, max_possible
+def find_min_valid(lo, hi, is_valid):
+    """Find smallest value where is_valid() returns True."""
+    while lo < hi:
+        mid = (lo + hi) // 2
 
-    while left < right:
-        mid = left + (right - left) // 2
-
-        if condition(mid):
-            right = mid  # mid might be answer, search left
+        if is_valid(mid):
+            hi = mid      # Valid! But maybe smaller works, keep mid, search LEFT
         else:
-            left = mid + 1
+            lo = mid + 1  # Invalid! Skip mid entirely, search RIGHT
 
-    return left
+    return lo  # lo == hi at this point
 ```
+
+### 🔑 KEY INSIGHT: Why `left = mid + 1` but `right = mid`?
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   When INVALID (left = mid + 1):                                   │
+│   • mid is DEFINITELY WRONG - we KNOW it's not the answer         │
+│   • Safe to SKIP it: left = mid + 1                               │
+│                                                                     │
+│   When VALID (right = mid):                                        │
+│   • mid MIGHT BE the answer! (smallest valid we've seen so far)   │
+│   • We CAN'T skip it - keep it in range: right = mid              │
+│   • If we used right = mid - 1, we might skip the actual answer!  │
+│                                                                     │
+│   THE GUARANTEE:                                                   │
+│   • Loop stops when left == right (they converge)                 │
+│   • right only moves to VALID positions                           │
+│   • left keeps pushing forward, skipping invalid ones             │
+│   • They MEET at the boundary = smallest valid answer!            │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Visual Walkthrough
+
+```
+Search space: [1, 9], find smallest divisor where sum <= threshold
+
+divisor:  1    2    3    4    5    6    7    8    9
+valid?    ❌   ❌   ❌   ❌   ✅   ✅   ✅   ✅   ✅
+                          ^
+                    Answer = 5 (smallest valid)
+
+Step 1: lo=1, hi=9, mid=5 → valid ✅ → hi=5  (keep 5)
+Step 2: lo=1, hi=5, mid=3 → invalid ❌ → lo=4  (skip 3)
+Step 3: lo=4, hi=5, mid=4 → invalid ❌ → lo=5  (skip 4)
+Step 4: lo=5, hi=5 → STOP! Return 5
+```
+
+### Template - Find MAXIMUM valid
+```python
+def find_max_valid(lo, hi, is_valid):
+    """Find largest value where is_valid() returns True."""
+    while lo < hi:
+        mid = (lo + hi + 1) // 2  # +1 to round UP (prevents infinite loop!)
+
+        if is_valid(mid):
+            lo = mid      # Valid! Try larger, keep mid, search RIGHT
+        else:
+            hi = mid - 1  # Invalid! Skip mid, search LEFT
+
+    return lo
+```
+
+### Quick Reference Table
+
+| Goal | mid calculation | When valid | When invalid |
+|------|-----------------|------------|--------------|
+| Find MIN valid | `(lo + hi) // 2` | `hi = mid` | `lo = mid + 1` |
+| Find MAX valid | `(lo + hi + 1) // 2` | `lo = mid` | `hi = mid - 1` |
 
 ### Key Problems
 - LC33: Search in Rotated Sorted Array
 - LC153: Find Minimum in Rotated Sorted Array
 - LC875: Koko Eating Bananas
 - LC1011: Capacity To Ship Packages
+- LC1283: Smallest Divisor Given Threshold
+- LC1552: Magnetic Force Between Two Balls
 
 ---
 
